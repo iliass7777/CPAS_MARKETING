@@ -12,10 +12,6 @@ class Database {
     public function connection(){
         $dbDir = __DIR__ . '/../db';
         $path = $dbDir . '/' . DB_NAME . '.sqlite';
-        mkdir($dbDir, 0755, true);
-        if (!is_dir($dbDir)) {
-            mkdir($dbDir, 0755, true);
-        }
         try{
             $this->pdo = new PDO('sqlite:' . $path);
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

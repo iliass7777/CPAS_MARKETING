@@ -14,7 +14,7 @@ class Category {
         $sql = "SELECT * FROM categories ORDER BY name ASC";
         $result = $this->db->query($sql);
         $categories = [];
-        if ($result && $result->rowCount() > 0) {
+        if ($result) {
             while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 $categories[] = $row;
             }
