@@ -1,0 +1,36 @@
+# Fichiers Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+
+# Fichiers de développement
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Fichiers HTML statiques (si vous utilisez uniquement PHP)
+home-page.html
+details-page.html
+back-ofice.html
+
+# Fichiers Docker
+dockerfile
+.dockerignore
+docker-compose.yml
+
+# Fichiers de base de données locaux (sera créé dans le conteneur)
+db/*.sqlite
+db/*.db
+
+# Fichiers temporaires
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+

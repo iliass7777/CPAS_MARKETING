@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Admin Back-Office Management</title>
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside
+            class="w-64 bg-white dark:bg-background-dark border-r border-gray-200 dark:border-gray-800 flex flex-col">
+            <div class="p-6 flex flex-col gap-8 h-full">
+                <!-- Brand -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary size-10 rounded-lg flex items-center justify-center text-white">
+                        <span class="material-symbols-outlined">auto_stories</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-gray-900 dark:text-white text-base font-bold leading-tight">Admin Portal</h1>
+                        <p class="text-gray-500 dark:text-gray-400 text-xs font-normal">Back-Office v1.0</p>
+                    </div>
+                </div>
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-1 grow">
+                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="#">
+                        <span class="material-symbols-outlined text-[24px]">database</span>
+                        <p class="text-sm font-semibold">Resources</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[24px]">folder</span>
+                        <p class="text-sm font-medium">Categories</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[24px]">chat_bubble</span>
+                        <p class="text-sm font-medium">User Feedback</p>
+                    </a>
+                    <div class="my-4 border-t border-gray-100 dark:border-gray-800"></div>
+                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        href="#">
+                        <span class="material-symbols-outlined text-[24px]">settings</span>
+                        <p class="text-sm font-medium">Settings</p>
+                    </a>
+                </nav>
+                <!-- Profile Footer -->
+                <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <div class="flex items-center gap-3">
+                        <div class="size-10 rounded-full bg-cover bg-center" data-alt="User avatar profile picture"
+                            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD2JiEyozjLTN4OYt4exs2cHUI-ZkbNeKx8xKePEjAe15y7BjWW6cveD_Vvoay3bD3AAhg4AJYB_uZW3r8izqB6QBfM65FI9-F8R65wD0FhRaniqREOjKnbDg1DHzPqfGdWYzzzZ5lLUyGJ-c6FbkpGWGGJLzDSybAoKM6T5o9LQrjys7uFL9OiPO69w8tT0FnmASMkRVyNX-Q5x3zodARtDmkRuGugr_yj-IQpJ593M-bUuGomkYQixwnHJQXSTay1K_eMgt3w5YY");'>
+                        </div>
+                        <div class="flex flex-col overflow-hidden">
+                            <p class="text-sm font-bold text-gray-900 dark:text-white truncate">Alex Moderator</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">alex@platform.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <!-- Top Navigation Bar -->
+            <header
+                class="flex items-center justify-between bg-white dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 px-8 py-4 sticky top-0 z-10">
+                <div class="flex items-center gap-6 flex-1">
+                    <label class="flex flex-col w-full max-w-md">
+                        <div class="flex w-full items-stretch rounded-lg h-10">
+                            <div
+                                class="text-gray-400 flex items-center justify-center pl-4 bg-gray-100 dark:bg-gray-800 rounded-l-lg">
+                                <span class="material-symbols-outlined text-[20px]">search</span>
+                            </div>
+                            <input
+                                class="form-input w-full border-none bg-gray-100 dark:bg-gray-800 focus:ring-0 focus:outline-0 text-sm placeholder:text-gray-500 dark:text-white px-4 rounded-r-lg"
+                                placeholder="Search resources, tags, or IDs..." value="" />
+                        </div>
+                    </label>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button
+                        class="flex items-center justify-center size-10 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <button
+                        class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm tracking-wide hover:bg-primary/90 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        <span>Add New Resource</span>
+                    </button>
+                </div>
+            </header>
+            <!-- Dashboard Body -->
+            <div class="p-8 space-y-8">
+                <!-- Page Heading -->
+                <div class="flex flex-wrap items-end justify-between gap-4">
+                    <div class="space-y-1">
+                        <h2 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Resource Management
+                        </h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-base">Curate and moderate the platform's top
+                            resource listings.</p>
+                    </div>
+                    <!-- Segmented Control -->
+                    <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+                        <button
+                            class="px-6 py-2 bg-white dark:bg-gray-700 shadow-sm rounded-lg text-sm font-semibold text-gray-900 dark:text-white transition-all">
+                            All Resources
+                        </button>
+                        <button
+                            class="px-6 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all">
+                            Manage Categories
+                        </button>
+                    </div>
+                </div>
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div
+                        class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Resources</p>
+                            <span class="material-symbols-outlined text-primary">inventory_2</span>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">1,284</p>
+                        <div class="mt-2 flex items-center text-xs text-green-500 font-medium">
+                            <span class="material-symbols-outlined text-[14px] mr-1">trending_up</span>
+                            <span>+12% from last month</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Pending Reviews</p>
+                            <span class="material-symbols-outlined text-amber-500">pending_actions</span>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">42</p>
+                        <div class="mt-2 flex items-center text-xs text-amber-500 font-medium">
+                            <span>Requires attention</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Categories</p>
+                            <span class="material-symbols-outlined text-purple-500">category</span>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">15</p>
+                        <div class="mt-2 flex items-center text-xs text-gray-400 font-medium">
+                            <span>Across 4 domains</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Data Table Container -->
+                <div
+                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Site Name</th>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Category</th>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Avg Rating</th>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Reviews</th>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">
+                                        Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                <!-- Row 1 -->
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="size-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                                <div class="w-full h-full bg-cover" data-alt="Stack Overflow icon logo"
+                                                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBryWrLuEh6SLb17-A9iiFwQf3XEpl6VxroBg-MKvgrFS1Mg9Y_ElPatVrBa_S7jNYoarA8fuu299J0Z1OzC6aI3lVdpPpUogiezpGFjTIAkhsAKSfVD5zbN5OhNqn_XOcoCQtFxAgl7_EMO_Bz4taPjmccmpMTik86EeSAixeBlAZjnT3Gog4AcXw10qfxJtL3gDnLz7-Bjv9O3WTNUhorjPiSj3i0qczPvVmlI7eEALxIYPaLw_S8mFJKLkYhE5UA9qNa3EcK1o4");'>
+                                                </div>
+                                            </div>
+                                            <span class="text-sm font-bold text-gray-900 dark:text-white">Stack
+                                                Overflow</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">Coding</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-1.5">
+                                            <span
+                                                class="material-symbols-outlined text-amber-400 text-[18px] fill-current">star</span>
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-white">4.9</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">12,402</td>
+                                    <td class="px-6 py-4">
+                                        <div
+                                            class="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-semibold text-sm">
+                                            <div class="size-2 rounded-full bg-current"></div>
+                                            Published
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                                                title="View Reviews">
+                                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                                                title="Edit Resource">
+                                                <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                title="Delete">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 2 -->
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="size-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                                <div class="w-full h-full bg-cover" data-alt="MDN Web Docs icon logo"
+                                                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDdiRiwYeYCrm73ctm4TrtXGQSJGflfqwiav9T8nk_PAg1vPBfXV73iSfUMuGQynySQBVwOeGIlaKGgqkX_eOA7oS7aBmvlR_n2BT4nBn7dVfG2sJdgk2pCJJn7sw0xfIihcO2GTZWbqOLLcG-mPmfuFPZ_YVc2UcApvTcVgxn9RDw2k_ucF6vgIgFQtQNYR0HuEfNszlXe42WLvXhMEjxYSyh-Mat4Ef8cGeJVnTdD-cFLR_m1cpbiiD1WbPR5SBya6fIRNXe_hWk");'>
+                                                </div>
+                                            </div>
+                                            <span class="text-sm font-bold text-gray-900 dark:text-white">MDN Web
+                                                Docs</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">Coding</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-1.5">
+                                            <span
+                                                class="material-symbols-outlined text-amber-400 text-[18px] fill-current">star</span>
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-white">4.8</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">8,950</td>
+                                    <td class="px-6 py-4">
+                                        <div
+                                            class="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-semibold text-sm">
+                                            <div class="size-2 rounded-full bg-current"></div>
+                                            Published
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors">
+                                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors">
+                                                <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 3 -->
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="size-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                                                <div class="w-full h-full bg-cover"
+                                                    data-alt="National Geographic icon logo"
+                                                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4gdxiV9iXz1J8qNESqPu8FT-uA5vIVKwz3501AplhZap2TPBa368xkvs99okvsG_2IY_YzauGnIPvdj-gN-dcn1z2bXdmMFNtOO7EIEQnOCNFwlPIpqn86XiiDtvkQzookqCWWD2vlEDeXumrlSNFDcG7RmaRWwDkD4vNzrvurifLxVHtu00nRR-ixMM95kZrUjgMFHc9DKyefuwqWreJCGVrDD2KWAsZe3-PODYYJ_X-PbnN5KLAggyUNvIvhjX4q3MPNDGXH2Q");'>
+                                                </div>
+                                            </div>
+                                            <span class="text-sm font-bold text-gray-900 dark:text-white">National
+                                                Geographic</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">Culture</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-1.5">
+                                            <span
+                                                class="material-symbols-outlined text-amber-400 text-[18px] fill-current">star</span>
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-white">4.7</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">5,120</td>
+                                    <td class="px-6 py-4">
+                                        <div
+                                            class="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 font-semibold text-sm">
+                                            <div class="size-2 rounded-full bg-current"></div>
+                                            Draft
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors">
+                                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors">
+                                                <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                                            </button>
+                                            <button
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination Placeholder -->
+                    <div
+                        class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Showing 1 to 3 of 1,284 resources</p>
+                        <div class="flex gap-2">
+                            <button
+                                class="px-3 py-1 text-sm font-semibold border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 disabled:opacity-50">Previous</button>
+                            <button
+                                class="px-3 py-1 text-sm font-semibold border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
