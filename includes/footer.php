@@ -14,9 +14,13 @@
             <div>
                 <h4 class="font-bold mb-4">Categories</h4>
                 <ul class="flex flex-col gap-2 text-sm text-[#617589] dark:text-gray-400">
-                    <?php if (isset($categories) && !empty($categories)): ?>
+                    <?php if (!empty($categories)): ?>
                         <?php foreach (array_slice($categories, 0, 4) as $cat): ?>
-                            <li><a class="hover:text-primary" href="index.php?category=<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></a></li>
+                            <li>
+                                <a class="hover:text-primary" href="index.php?category=<?php echo $cat['id']; ?>&category_slug=<?php echo urlencode($cat['slug']); ?>">
+                                    <?php echo htmlspecialchars($cat['name']); ?>
+                                </a>
+                            </li>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <li><a class="hover:text-primary" href="index.php">Development</a></li>
@@ -55,6 +59,4 @@
         </div>
     </footer>
 </body>
-
 </html>
-

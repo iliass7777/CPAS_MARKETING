@@ -1,53 +1,104 @@
-<!DOCTYPE html>
+<?php
+require_once __DIR__ . '/models/Category.php';
+require_once __DIR__ . '/models/Website.php';
 
-<html class="light" lang="en">
+$categoryModel = new Category();
+$websiteModel = new Website();
 
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>ResourceHub - Discovery Homepage</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <!-- Google Fonts: Lexend & Material Symbols -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#137fec",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#101922",
-                    },
-                    fontFamily: {
-                        "display": ["Lexend", "sans-serif"]
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                },
-            },
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Lexend', sans-serif;
-        }
+// Get all categories
+$categories = $categoryModel->getAll();
 
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
+// Get search term
+$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
+$selectedCategoryId = isset($_GET['category']) ? (int)$_GET['category'] : null;
+$selectedCategorySlug = isset($_GET['category_slug']) ? $_GET['category_slug'] : null;
 
-        .active-filter {
-            background-color: #137fec;
-            color: white;
+$itemsPerPage = 6; // Nombre d'éléments par page
+$currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Page actuelle (minimum 1)
+$offset = ($currentPage - 1) * $itemsPerPage; // Calcul de l'offset
+
+// Get websites - priority: search > category > all
+if (!empty($searchTerm)) {
+    // Si une recherche est effectuée, rechercher dans tous les sites
+    $allWebsites = $websiteModel->search($searchTerm, 9999, 0);
+    $websites = array_slice($allWebsites, $offset, $itemsPerPage);
+    $totalWebsites = count($allWebsites);
+} elseif ($selectedCategoryId) {
+    // Si une catégorie est sélectionnée, récupérer tous les sites de cette catégorie
+    $allWebsites = $websiteModel->getByCategory($selectedCategoryId);
+    // Appliquer la pagination manuellement pour les catégories
+    $websites = array_slice($allWebsites, $offset, $itemsPerPage);
+    $totalWebsites = count($allWebsites);
+} else {
+    // Récupérer tous les sites avec pagination
+    $websites = $websiteModel->getAll($itemsPerPage, $offset);
+    // Pour obtenir le total, on récupère tous les sites sans limite
+    $allWebsites = $websiteModel->getAll(9999, 0);
+    $totalWebsites = count($allWebsites);
+}
+
+// Calcul du nombre total de pages
+$totalPages = ceil($totalWebsites / $itemsPerPage);
+
+// Icon mapping for categories
+$categoryIcons = [
+    'coding' => 'code',
+    'design' => 'palette',
+    'general culture' => 'public',
+    'productivity' => 'bolt',
+    'marketing' => 'trending_up',
+    'education' => 'school',
+    'default' => 'dashboard'
+];
+
+function getCategoryIcon($categoryName, $categoryIcons) {
+    $nameLower = strtolower($categoryName);
+    foreach ($categoryIcons as $key => $icon) {
+        if (strpos($nameLower, $key) !== false) {
+            return $icon;
         }
-    </style>
-</head>
+    }
+    return $categoryIcons['default'];
+}
+
+function getCategoryColor($categoryName) {
+    $nameLower = strtolower($categoryName);
+    if (strpos($nameLower, 'coding') !== false || strpos($nameLower, 'code') !== false) {
+        return 'text-primary';
+    } elseif (strpos($nameLower, 'design') !== false) {
+        return 'text-orange-500';
+    } elseif (strpos($nameLower, 'general') !== false || strpos($nameLower, 'culture') !== false) {
+        return 'text-green-500';
+    } elseif (strpos($nameLower, 'productivity') !== false) {
+        return 'text-purple-500';
+    } elseif (strpos($nameLower, 'marketing') !== false) {
+        return 'text-red-500';
+    }
+    return 'text-primary';
+}
+
+function formatRating($rating) {
+    return number_format((float)$rating, 1);
+}
+
+function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCategorySlug) {
+    $params = [];
+    if (!empty($searchTerm)) {
+        $params[] = 'search=' . urlencode($searchTerm);
+    }
+    if ($selectedCategoryId) {
+        $params[] = 'category=' . $selectedCategoryId;
+        if ($selectedCategorySlug) {
+            $params[] = 'category_slug=' . urlencode($selectedCategorySlug);
+        }
+    }
+    if ($page > 1) {
+        $params[] = 'page=' . $page;
+    }
+    return 'index.php' . (!empty($params) ? '?' . implode('&', $params) : '');
+}
+?>
+<?php include __DIR__ . '/includes/head.php'; ?>
 
 <body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white transition-colors duration-200">
     <!-- Top Navigation Bar -->
@@ -63,19 +114,27 @@
             </div>
             <!-- Search Bar -->
             <div class="flex-1 max-w-xl">
-                <div class="relative group">
+                <form method="GET" action="index.php" class="relative group">
+                    <?php if ($selectedCategoryId): ?>
+                        <input type="hidden" name="category" value="<?php echo $selectedCategoryId; ?>">
+                        <input type="hidden" name="category_slug" value="<?php echo htmlspecialchars($selectedCategorySlug); ?>">
+                    <?php endif; ?>
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[#617589]">
                         <span class="material-symbols-outlined text-xl">search</span>
                     </div>
                     <input
+                        name="search"
+                        value="<?php echo htmlspecialchars($searchTerm); ?>"
                         class="block w-full rounded-lg border-none bg-background-light dark:bg-gray-800 py-2 pl-10 pr-3 text-sm placeholder-[#617589] focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-gray-700 transition-all"
-                        placeholder="Search for tools, sites, or topics..." type="text" />
-                </div>
+                        placeholder="Search for tools, sites, or topics..." 
+                        type="text" 
+                        autocomplete="off" />
+                </form>
             </div>
             <!-- Nav Actions -->
             <div class="flex items-center gap-6">
                 <nav class="hidden md:flex items-center gap-6">
-                    <a class="text-sm font-medium hover:text-primary" href="#">Explore</a>
+                    <a class="text-sm font-medium hover:text-primary" href="index.php">Explore</a>
                     <a class="text-sm font-medium hover:text-primary" href="#">Top Leaders</a>
                     <a class="text-sm font-medium hover:text-primary" href="#">Community</a>
                 </nav>
@@ -111,30 +170,24 @@
             </div>
             <!-- Categories -->
             <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                <button
-                    class="flex items-center gap-2 h-9 px-4 rounded-full bg-primary text-white text-sm font-medium whitespace-nowrap">
+                <a href="index.php"
+                    class="flex items-center gap-2 h-9 px-4 rounded-full <?php echo !$selectedCategoryId ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 hover:border-primary transition-colors'; ?> text-sm font-medium whitespace-nowrap">
                     <span class="material-symbols-outlined text-lg">dashboard</span> All Categories
-                </button>
-                <button
-                    class="flex items-center gap-2 h-9 px-4 rounded-full bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 hover:border-primary transition-colors text-sm font-medium whitespace-nowrap">
-                    <span class="material-symbols-outlined text-lg text-primary">code</span> Coding
-                </button>
-                <button
-                    class="flex items-center gap-2 h-9 px-4 rounded-full bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 hover:border-primary transition-colors text-sm font-medium whitespace-nowrap">
-                    <span class="material-symbols-outlined text-lg text-orange-500">palette</span> Design
-                </button>
-                <button
-                    class="flex items-center gap-2 h-9 px-4 rounded-full bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 hover:border-primary transition-colors text-sm font-medium whitespace-nowrap">
-                    <span class="material-symbols-outlined text-lg text-green-500">public</span> General Culture
-                </button>
-                <button
-                    class="flex items-center gap-2 h-9 px-4 rounded-full bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 hover:border-primary transition-colors text-sm font-medium whitespace-nowrap">
-                    <span class="material-symbols-outlined text-lg text-purple-500">bolt</span> Productivity
-                </button>
-                <button
-                    class="flex items-center gap-2 h-9 px-4 rounded-full bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 hover:border-primary transition-colors text-sm font-medium whitespace-nowrap">
-                    <span class="material-symbols-outlined text-lg text-red-500">trending_up</span> Marketing
-                </button>
+                </a>
+                <?php if (!empty($categories)): ?>
+                    <?php foreach ($categories as $category): ?>
+                        <?php 
+                        $isActive = $selectedCategoryId == $category['id'];
+                        $icon = getCategoryIcon($category['name'], $categoryIcons);
+                        $color = getCategoryColor($category['name']);
+                        ?>
+                        <a href="index.php?category=<?php echo $category['id']; ?>&category_slug=<?php echo urlencode($category['slug']); ?>"
+                            class="flex items-center gap-2 h-9 px-4 rounded-full <?php echo $isActive ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 hover:border-primary transition-colors'; ?> text-sm font-medium whitespace-nowrap">
+                            <span class="material-symbols-outlined text-lg <?php echo $isActive ? '' : $color; ?>"><?php echo $icon; ?></span> 
+                            <?php echo htmlspecialchars($category['name']); ?>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
         <div class="flex flex-col md:flex-row gap-8">
@@ -147,7 +200,7 @@
                             <h3 class="text-sm font-bold uppercase tracking-wider text-[#617589] mb-4">Filters</h3>
                             <div class="flex flex-col gap-1">
                                 <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-bold transition-colors"
-                                    href="#">
+                                    href="index.php">
                                     <span class="material-symbols-outlined">auto_awesome</span> All Resources
                                 </a>
                                 <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-background-light dark:hover:bg-gray-800 text-[#617589] dark:text-gray-300 font-medium transition-colors"
@@ -158,27 +211,6 @@
                                     href="#">
                                     <span class="material-symbols-outlined">trending_up</span> Most Popular
                                 </a>
-                            </div>
-                        </div>
-                        <div class="h-px bg-[#f0f2f4] dark:bg-gray-800"></div>
-                        <div>
-                            <h3 class="text-sm font-bold uppercase tracking-wider text-[#617589] mb-4">Pricing</h3>
-                            <div class="flex flex-col gap-3">
-                                <label class="flex items-center gap-3 cursor-pointer group">
-                                    <input checked=""
-                                        class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
-                                        type="checkbox" />
-                                    <span
-                                        class="text-sm text-[#111418] dark:text-gray-200 group-hover:text-primary transition-colors">Free
-                                        Resources</span>
-                                </label>
-                                <label class="flex items-center gap-3 cursor-pointer group">
-                                    <input class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
-                                        type="checkbox" />
-                                    <span
-                                        class="text-sm text-[#111418] dark:text-gray-200 group-hover:text-primary transition-colors">Paid
-                                        Premium</span>
-                                </label>
                             </div>
                         </div>
                         <div class="h-px bg-[#f0f2f4] dark:bg-gray-800"></div>
@@ -203,7 +235,7 @@
                                         <span class="material-symbols-outlined">star</span>
                                         <span class="material-symbols-outlined">star</span>
                                     </div>
-                                    <span class="text-xs text-[#617589] font-medium">&amp; Up</span>
+                                    <span class="text-xs text-[#617589] font-medium">& Up</span>
                                 </button>
                             </div>
                         </div>
@@ -213,271 +245,128 @@
             <!-- Main Resource Grid -->
             <div class="flex-1">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Card 1 -->
+                    <?php if (!empty($websites)): ?>
+                        <?php foreach ($websites as $website): ?>
+                            <?php 
+                            $isTopLeader = $website['rating'] >= 4.5 && $website['total_ratings'] >= 100;
+                            ?>
                     <div
                         class="bg-white dark:bg-[#1a242f] rounded-xl border border-[#f0f2f4] dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all group">
                         <div class="relative h-48 bg-[#f8fafc] dark:bg-gray-800">
                             <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                                data-alt="GitHub website logo and interface"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDs2uGhTyvuiLD-QVr0DmK6_bgvfOdRO9t3gYbhGJ4cSChuAHDtnfSJUZs2YLqr7gZ_MVMhCShsZ9F5xWuOP2HBh_aHp8zn0LZLzsz6ObeQ9dMfCsrXTq9wpNS7TM9pduV9N0ps_BYgQQ3BxSdTPEhAuyXKXDTHqzWEgjSehqlWN-2lNgur26bJms6whvmR0WL55-upZIdnusI3M_s53iqVK3YxvjhRgJp5p-ULpzhzPcaXrhAoNQm7D38ULHnxGZWHhTguYser6yk");'>
+                                        data-alt="<?php echo htmlspecialchars($website['name']); ?> website preview"
+                                        style='background-image: url("https://via.placeholder.com/400x200/137fec/ffffff?text=<?php echo urlencode($website['name']); ?>");'>
                             </div>
+                                    <?php if ($isTopLeader): ?>
                             <div class="absolute top-3 right-3">
                                 <span
                                     class="bg-primary text-white text-[10px] font-black uppercase px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
                                     <span class="material-symbols-outlined text-xs">verified</span> Top Leader
                                 </span>
                             </div>
+                                    <?php endif; ?>
                         </div>
                         <div class="p-5 flex flex-col gap-4">
                             <div>
-                                <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-1">GitHub</h3>
-                                <p class="text-sm text-[#617589] dark:text-gray-400 line-clamp-2">World's leading
-                                    development platform for hosting and managing software projects.</p>
+                                        <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-1">
+                                            <?php echo htmlspecialchars($website['name']); ?>
+                                        </h3>
+                                        <p class="text-sm text-[#617589] dark:text-gray-400 line-clamp-2">
+                                            <?php echo htmlspecialchars($website['description'] ?: 'No description available.'); ?>
+                                        </p>
                             </div>
-                            <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
                                 <div class="flex items-center gap-1">
                                     <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-                                    <span class="text-sm font-bold text-[#111418] dark:text-white">4.9</span>
-                                    <span class="text-xs text-[#617589]">(2.4k reviews)</span>
-                                </div>
-                                <span
-                                    class="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">FREE</span>
-                            </div>
-                            <button
-                                class="w-full h-10 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Card 2 -->
-                    <div
-                        class="bg-white dark:bg-[#1a242f] rounded-xl border border-[#f0f2f4] dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all group">
-                        <div class="relative h-48 bg-[#f8fafc] dark:bg-gray-800">
-                            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                                data-alt="Stack Overflow community platform"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8PrFxhPaHwKZuXhk60mcwZjZj_-ggciZ5AoXlX6tN_voBrWsTukTH-lpTqMyZ5LEfCpf6w1JRggExsyxIMQw3CEt8dDhEGwhPwc4OOVpGNsSJJQS1is07E7c1yv8jchJi5bAHkRsx38xlHW7v5YmOJWzeX0JHVe2-VZWvN-ZHFDHMyQt5KYvog9tL266jyXu_1DG96q1H_yIaz4vEx4O4kUpO_SIpda5rH-G0TO0yLFpbFgtpH2HD-wMSOLKFZo_htyyR7VkS_W4");'>
-                            </div>
-                        </div>
-                        <div class="p-5 flex flex-col gap-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-1">Stack Overflow</h3>
-                                <p class="text-sm text-[#617589] dark:text-gray-400 line-clamp-2">The largest online
-                                    community for developers to learn, share knowledge, and build careers.</p>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-                                    <span class="text-sm font-bold text-[#111418] dark:text-white">4.7</span>
-                                    <span class="text-xs text-[#617589]">(1.8k reviews)</span>
-                                </div>
-                                <span
-                                    class="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">FREE</span>
-                            </div>
-                            <button
-                                class="w-full h-10 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Card 3 -->
-                    <div
-                        class="bg-white dark:bg-[#1a242f] rounded-xl border border-[#f0f2f4] dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all group">
-                        <div class="relative h-48 bg-[#f8fafc] dark:bg-gray-800">
-                            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                                data-alt="Figma design tool interface"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCuSkt73pMrCekTkEGd7nxNti0P3Mfp79kpZp2mVAoGBaaW2-Vw1Xk99buj9fxGY9lLohYngY7uwCtY6soToySA6G64T9sqfqAL410wU9tcsNkVHDO-Hq4AY9xLICBBVVTEcZJjWY5kor0IF6RWJTw4Qsp1xYN7Y-JrDYLzeuhIIk8doZNjeeWEgEMR5Z9WZoCrhpawfbVmz6m5TtZehCHHuyy87wHRcHWPNIflfLQZ2jfdyldpeO9AHb0JWLN7ZULAzzhZbbyeGOY");'>
-                            </div>
-                            <div class="absolute top-3 right-3">
-                                <span
-                                    class="bg-primary text-white text-[10px] font-black uppercase px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                                    <span class="material-symbols-outlined text-xs">verified</span> Top Leader
+                                            <span class="text-sm font-bold text-[#111418] dark:text-white">
+                                                <?php echo formatRating($website['rating']); ?>
+                                            </span>
+                                            <span class="text-xs text-[#617589]">
+                                                (<?php echo $website['total_ratings']; ?> reviews)
                                 </span>
                             </div>
                         </div>
-                        <div class="p-5 flex flex-col gap-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-1">Figma</h3>
-                                <p class="text-sm text-[#617589] dark:text-gray-400 line-clamp-2">Collaborative
-                                    interface design tool that powers modern product teams.</p>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-                                    <span class="text-sm font-bold text-[#111418] dark:text-white">4.8</span>
-                                    <span class="text-xs text-[#617589]">(3.1k reviews)</span>
-                                </div>
-                                <span
-                                    class="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">FREEMIUM</span>
-                            </div>
-                            <button
-                                class="w-full h-10 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
+                                    <a href="website.php?id=<?php echo $website['id']; ?>"
+                                        class="w-full h-10 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors flex items-center justify-center">
                                 View Details
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Card 4 -->
-                    <div
-                        class="bg-white dark:bg-[#1a242f] rounded-xl border border-[#f0f2f4] dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all group">
-                        <div class="relative h-48 bg-[#f8fafc] dark:bg-gray-800">
-                            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                                data-alt="Coursera online education platform"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBm6TEi2iGwtj1KHhMeBcW7ONde6UHZ-zuxsSHoDQXJihNt_YZIL-E8WEmaQepH8YZgOgEK4AWYhP09Amct_SH7aG-ZeBYwaieKRcpE8EEGtxiQqmQqzMN_JJSSy8JL0PwhJQvDLJ8C19CbqGWbzLUTR_L2SsqVYYbsO-Y9wdcX32XNAd4YOs7g3suDhwtyTHBr0rZIZY1gYzHhYXgit1CIJtDxP4je-gQ7ds6mpSxTCmqWF2wUOVsD7donciKQcOzan0NIEtVLmCg");'>
-                            </div>
-                        </div>
-                        <div class="p-5 flex flex-col gap-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-1">Coursera</h3>
-                                <p class="text-sm text-[#617589] dark:text-gray-400 line-clamp-2">Access online courses
-                                    from top universities and industry leaders around the globe.</p>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-                                    <span class="text-sm font-bold text-[#111418] dark:text-white">4.5</span>
-                                    <span class="text-xs text-[#617589]">(980 reviews)</span>
+                                    </a>
                                 </div>
-                                <span
-                                    class="text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">PAID</span>
                             </div>
-                            <button
-                                class="w-full h-10 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
-                                View Details
-                            </button>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-span-full text-center py-12">
+                            <?php if (!empty($searchTerm)): ?>
+                                <p class="text-[#617589] dark:text-gray-400">No websites found for "<?php echo htmlspecialchars($searchTerm); ?>". Try a different search term.</p>
+                            <?php else: ?>
+                                <p class="text-[#617589] dark:text-gray-400">No websites found. Check back later!</p>
+                            <?php endif; ?>
                         </div>
-                    </div>
-                    <!-- Card 5 -->
-                    <div
-                        class="bg-white dark:bg-[#1a242f] rounded-xl border border-[#f0f2f4] dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all group">
-                        <div class="relative h-48 bg-[#f8fafc] dark:bg-gray-800">
-                            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                                data-alt="Dribbble design portfolio site"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCg-WviioSuzXfuNx-FOL37a_26vCKVd9cuEQIqYdV90Tm4U8xHmk89MANDZJN1zh9BrH3fcTt2RTYxz8tX4Czh7_uslWtKRk-U5FaCPJ3nKXGwSKlL_mxLcpxDqRduJZ2QI3ZG1Ck8Ig6tPf7HB0eUBfmNNNrp_yUAplaDwa3COpnQdO6ynjZZ2XmQ33edqGer-xeYJ3daaxToznB_GTBpndK23a7dnRPU7MQ96yNcLdUd2CIx803CNqpYBdFMwOLAd198gcx7h2M");'>
-                            </div>
-                        </div>
-                        <div class="p-5 flex flex-col gap-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-1">Dribbble</h3>
-                                <p class="text-sm text-[#617589] dark:text-gray-400 line-clamp-2">The go-to destination
-                                    for designers and creative professionals to share work.</p>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-                                    <span class="text-sm font-bold text-[#111418] dark:text-white">4.6</span>
-                                    <span class="text-xs text-[#617589]">(1.5k reviews)</span>
-                                </div>
-                                <span
-                                    class="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">FREE</span>
-                            </div>
-                            <button
-                                class="w-full h-10 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Card 6 -->
-                    <div
-                        class="bg-white dark:bg-[#1a242f] rounded-xl border border-[#f0f2f4] dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-all group">
-                        <div class="relative h-48 bg-[#f8fafc] dark:bg-gray-800">
-                            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                                data-alt="Wikipedia encyclopedia"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDEePB5vvQgWniugQRGaTEgkMcpY_OcdoUzl95UVh5nZU1jdja3ge2lWigDDzJCz_6bQDnyPDPpPEz8yry45MFKa1LPHNHnlBhdGNdRSrr5H8-HTx7IOAHukWiTSsrteDoc0HAANy6DBCRhLaS0M70VI8aDMjZKRVX4mo0DdAI3_yoBrpuS3x5MqHjd3SuBXrnqcfMLagIdcRI4pfD23XV0b6jQQQmDGZAEErS1u_J54XZ_JpZXADD4i8_X32mC46X-tffLTmeMxK0");'>
-                            </div>
-                        </div>
-                        <div class="p-5 flex flex-col gap-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-[#111418] dark:text-white mb-1">Wikipedia</h3>
-                                <p class="text-sm text-[#617589] dark:text-gray-400 line-clamp-2">The free encyclopedia
-                                    that anyone can edit, providing vast knowledge on every subject.</p>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-                                    <span class="text-sm font-bold text-[#111418] dark:text-white">4.4</span>
-                                    <span class="text-xs text-[#617589]">(5k reviews)</span>
-                                </div>
-                                <span
-                                    class="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">FREE</span>
-                            </div>
-                            <button
-                                class="w-full h-10 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
-                <!-- Pagination Placeholder -->
+                <!-- Pagination -->
+                <?php if ($totalPages > 1): ?>
                 <div class="mt-12 flex justify-center">
                     <nav class="flex items-center gap-2">
-                        <button
+                            <!-- Bouton Précédent -->
+                            <?php if ($currentPage > 1): ?>
+                                <a href="<?php echo buildPaginationUrl($currentPage - 1, $searchTerm, $selectedCategoryId, $selectedCategorySlug); ?>"
                             class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors">
                             <span class="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        <button
-                            class="size-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold">1</button>
-                        <button
-                            class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors">2</button>
-                        <button
-                            class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors">3</button>
+                                </a>
+                            <?php else: ?>
+                                <span class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 opacity-50 cursor-not-allowed">
+                                    <span class="material-symbols-outlined">chevron_left</span>
+                                </span>
+                            <?php endif; ?>
+                            
+                            <!-- Numéros de pages -->
+                            <?php
+                            $startPage = max(1, $currentPage - 2);
+                            $endPage = min($totalPages, $currentPage + 2);
+                            
+                            // Afficher la première page si nécessaire
+                            if ($startPage > 1): ?>
+                                <a href="<?php echo buildPaginationUrl(1, $searchTerm, $selectedCategoryId, $selectedCategorySlug); ?>"
+                                    class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors">1</a>
+                                <?php if ($startPage > 2): ?>
+                                    <span class="mx-2 text-[#617589]">...</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            
+                            <!-- Pages autour de la page actuelle -->
+                            <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <?php if ($i == $currentPage): ?>
+                                    <span class="size-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold"><?php echo $i; ?></span>
+                                <?php else: ?>
+                                    <a href="<?php echo buildPaginationUrl($i, $searchTerm, $selectedCategoryId, $selectedCategorySlug); ?>"
+                                        class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors"><?php echo $i; ?></a>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+                            
+                            <!-- Afficher la dernière page si nécessaire -->
+                            <?php if ($endPage < $totalPages): ?>
+                                <?php if ($endPage < $totalPages - 1): ?>
                         <span class="mx-2 text-[#617589]">...</span>
-                        <button
+                                <?php endif; ?>
+                                <a href="<?php echo buildPaginationUrl($totalPages, $searchTerm, $selectedCategoryId, $selectedCategorySlug); ?>"
+                                    class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors"><?php echo $totalPages; ?></a>
+                            <?php endif; ?>
+                            
+                            <!-- Bouton Suivant -->
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a href="<?php echo buildPaginationUrl($currentPage + 1, $searchTerm, $selectedCategoryId, $selectedCategorySlug); ?>"
                             class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 hover:bg-white dark:hover:bg-gray-800 transition-colors">
                             <span class="material-symbols-outlined">chevron_right</span>
-                        </button>
+                                </a>
+                            <?php else: ?>
+                                <span class="size-10 flex items-center justify-center rounded-lg border border-[#f0f2f4] dark:border-gray-800 opacity-50 cursor-not-allowed">
+                                    <span class="material-symbols-outlined">chevron_right</span>
+                                </span>
+                            <?php endif; ?>
                     </nav>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </main>
-    <!-- Footer -->
-    <footer class="mt-20 border-t border-[#f0f2f4] dark:border-gray-800 bg-white dark:bg-[#1a242f] py-12 px-4 lg:px-20">
-        <div class="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div class="col-span-1 md:col-span-1 flex flex-col gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="text-primary">
-                        <span class="material-symbols-outlined text-3xl">hub</span>
-                    </div>
-                    <h2 class="text-xl font-bold tracking-tight text-[#111418] dark:text-white">ResourceHub</h2>
-                </div>
-                <p class="text-sm text-[#617589] dark:text-gray-400">Discovering and ranking the web's best tools since
-                    2023.</p>
-            </div>
-            <div>
-                <h4 class="font-bold mb-4">Categories</h4>
-                <ul class="flex flex-col gap-2 text-sm text-[#617589] dark:text-gray-400">
-                    <li><a class="hover:text-primary" href="#">Development</a></li>
-                    <li><a class="hover:text-primary" href="#">Graphic Design</a></li>
-                    <li><a class="hover:text-primary" href="#">Marketing Tools</a></li>
-                    <li><a class="hover:text-primary" href="#">Education</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-bold mb-4">Support</h4>
-                <ul class="flex flex-col gap-2 text-sm text-[#617589] dark:text-gray-400">
-                    <li><a class="hover:text-primary" href="#">Help Center</a></li>
-                    <li><a class="hover:text-primary" href="#">Submit a Resource</a></li>
-                    <li><a class="hover:text-primary" href="#">API Documentation</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-bold mb-4">Newsletter</h4>
-                <p class="text-sm text-[#617589] dark:text-gray-400 mb-4">Get the weekly top leaders list in your inbox.
-                </p>
-                <div class="flex gap-2">
-                    <input class="flex-1 rounded-lg border-[#f0f2f4] dark:border-gray-800 dark:bg-gray-800 text-sm"
-                        placeholder="Email" type="email" />
-                    <button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold">Join</button>
-                </div>
-            </div>
-        </div>
-        <div
-            class="max-w-[1440px] mx-auto mt-12 pt-8 border-t border-[#f0f2f4] dark:border-gray-800 flex justify-between items-center text-xs text-[#617589]">
-            <p>© 2024 ResourceHub Inc. All rights reserved.</p>
-            <div class="flex gap-4">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+<?php include __DIR__ . '/includes/footer.php'; ?>

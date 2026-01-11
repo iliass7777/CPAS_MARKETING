@@ -10,15 +10,14 @@ class Website {
         $this->db = $database->getConnection();
     }
 
-    public function getAll() {
+    public function getAll($limit,$offset) {
         $sql = "SELECT w.*, c.name as category_name, c.slug as category_slug 
                 FROM websites w 
                 LEFT JOIN categories c ON w.category_id = c.id 
-                ORDER BY w.rating DESC, w.name ASC";
+                ORDER BY w.rating DESC, w.name ASC  LIMIT $limit OFFSET $offset";
         $result = $this->db->query($sql);
         $websites = [];
-        
-        if ($result && $result->rowCount() > 0) {
+        if ($result) {
             while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
                 $websites[] = $row;
             }
@@ -91,6 +90,36 @@ class Website {
         }
         
         return false;
+    }
+
+    public function search($searchTerm, $limit = null, $offset = 0) {
+        // Sécuriser les valeurs LIMIT et OFFSET
+        $limit = $limit !== null ? max(1, (int)$limit) : 999999;
+        $offset = max(0, (int)$offset);
+        
+        $searchTerm = '%' . $searchTerm . '%';
+        
+        $sql = "SELECT w.*, c.name as category_name, c.slug as category_slug 
+                FROM websites w 
+                LEFT JOIN categories c ON w.category_id = c.id 
+                WHERE w.name LIKE ? OR w.description LIKE ?
+                ORDER BY w.rating DESC, w.name ASC 
+                LIMIT {$limit} OFFSET {$offset}";
+        
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$searchTerm, $searchTerm]);
+            
+            $websites = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $websites[] = $row;
+            }
+            
+            return $websites;
+        } catch (PDOException $e) {
+            error_log("Error in Website::search(): " . $e->getMessage());
+            return [];
+        }
     }
 }
 
