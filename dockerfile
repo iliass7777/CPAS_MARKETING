@@ -30,6 +30,7 @@ RUN echo '<Directory /var/www/html>' > /etc/apache2/conf-available/php-app.conf 
     echo '</Directory>' >> /etc/apache2/conf-available/php-app.conf && \
     a2enconf php-app
 
-# Expose port 80
-EXPOSE 3000
+
+
+EXPOSE 80
 
