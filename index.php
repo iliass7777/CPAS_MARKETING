@@ -138,16 +138,7 @@ function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCa
                     <a class="text-sm font-medium hover:text-primary" href="#">Top Leaders</a>
                     <a class="text-sm font-medium hover:text-primary" href="#">Community</a>
                 </nav>
-                <div class="flex items-center gap-3 border-l border-[#f0f2f4] dark:border-gray-800 pl-6">
-                    <button
-                        class="flex h-10 px-4 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold hover:bg-blue-600 transition-colors">
-                        Login
-                    </button>
-                    <div class="size-10 rounded-full bg-cover bg-center border border-[#f0f2f4]"
-                        data-alt="User avatar placeholder"
-                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAXit4Fh-YCqc2uznG1uMYQeFJmLwFnpnJ2qDFvELeml7NgbBViJH-d2qyJexlz3raEr0Tsm2FdlgZCir55RuJXiqZz2_XqsgkB9_1UjtQ_zo7GS07KilzDVqUaXqR_oQIyjh7W_zgM9XKSV5shlJSb_brNy-t2U5cecn8fbKNOXCwD8E8vDByXvs4mIVAqj_y_qSdL-AI6RcDME-4UcS4LNPj29ZBIpXK1wpCkebyLzxmQldBBQv2BR9p3_ZKrHDRgMDdhjgghYt4");'>
-                    </div>
-                </div>
+            
             </div>
         </div>
     </header>

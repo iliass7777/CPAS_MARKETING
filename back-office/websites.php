@@ -84,11 +84,13 @@ if ($action === 'edit' && $id > 0) {
 }
 
 // Get stats
-$totalWebsites = count($websites);
-$pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
+ $totalWebsites = count($websites);
+ $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
     return $r['status'] === 'pending';
 }));
 $totalCategories = count($categories);
+$drawerOpen = in_array($action, ['create', 'edit']);
+$drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
 ?>
 <!DOCTYPE html>
 
@@ -284,7 +286,6 @@ $totalCategories = count($categories);
                     </div>
                 </div>
                 
-                <?php if ($action === 'list'): ?>
                     <!-- Data Table Container -->
                     <div
                         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
@@ -386,65 +387,97 @@ $totalCategories = count($categories);
                             <p class="text-sm text-gray-500 dark:text-gray-400">Showing 1 to <?php echo min(count($websites), 10); ?> of <?php echo count($websites); ?> resources</p>
                         </div>
                     </div>
-                <?php elseif ($action === 'create' || $action === 'edit'): ?>
-                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-8">
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6"><?php echo $action === 'create' ? 'Create' : 'Edit'; ?> Website</h3>
-                        <form method="POST" class="space-y-6">
-                            <?php if ($action === 'edit'): ?>
-                                <input type="hidden" name="update" value="1">
-                                <input type="hidden" name="id" value="<?php echo $website['id']; ?>">
-                            <?php else: ?>
-                                <input type="hidden" name="create" value="1">
-                            <?php endif; ?>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category *</label>
-                                <select name="category_id" required
-                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
-                                    <option value="">Select Category</option>
-                                    <?php foreach ($categories as $cat): ?>
-                                        <option value="<?php echo $cat['id']; ?>" 
-                                            <?php echo ($website && $website['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($cat['name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name *</label>
-                                <input type="text" name="name" value="<?php echo $website ? htmlspecialchars($website['name']) : ''; ?>" required
-                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL *</label>
-                                <input type="url" name="url" value="<?php echo $website ? htmlspecialchars($website['url']) : ''; ?>" required
-                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                                <textarea name="description" rows="5"
-                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary"><?php echo $website ? htmlspecialchars($website['description']) : ''; ?></textarea>
-                            </div>
-                            
-                            <div class="flex gap-4">
-                                <button type="submit"
-                                    class="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors">
-                                    <?php echo $action === 'create' ? 'Create' : 'Update'; ?> Website
-                                </button>
+
+                    <!-- Drawer -->
+                    <div class="fixed inset-0 z-40 <?php echo $drawerOpen ? '' : 'pointer-events-none'; ?>" aria-hidden="<?php echo $drawerOpen ? 'false' : 'true'; ?>">
+                        <div id="websites-drawer-backdrop"
+                            class="absolute inset-0 bg-black/40 transition-opacity <?php echo $drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'; ?>">
+                        </div>
+                        <section
+                            class="absolute inset-y-0 right-0 w-full max-w-md bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl transition-transform duration-200 transform <?php echo $drawerOpen ? 'translate-x-0' : 'translate-x-full'; ?> flex flex-col overflow-y-auto"
+                            role="dialog" aria-modal="true" aria-label="Resource drawer">
+                            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div class="space-y-1">
+                                    <p class="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold">Resource desk</p>
+                                    <h3 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo htmlspecialchars($drawerTitle); ?></h3>
+                                </div>
                                 <a href="websites.php"
-                                    class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                                    Cancel
+                                    class="size-10 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 transition-colors">
+                                    <span class="material-symbols-outlined">close</span>
                                 </a>
                             </div>
-                        </form>
+                            <div class="px-6 py-6 space-y-6 flex-1">
+                                <form method="POST" class="space-y-6">
+                                    <?php if ($action === 'edit'): ?>
+                                        <input type="hidden" name="update" value="1">
+                                        <input type="hidden" name="id" value="<?php echo $website['id']; ?>">
+                                    <?php else: ?>
+                                        <input type="hidden" name="create" value="1">
+                                    <?php endif; ?>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category *</label>
+                                        <select name="category_id" required
+                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                            <option value="">Select Category</option>
+                                            <?php foreach ($categories as $cat): ?>
+                                                <option value="<?php echo $cat['id']; ?>"
+                                                    <?php echo ($website && $website['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($cat['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name *</label>
+                                        <input type="text" name="name" value="<?php echo $website ? htmlspecialchars($website['name']) : ''; ?>"
+                                            required class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL *</label>
+                                        <input type="url" name="url" value="<?php echo $website ? htmlspecialchars($website['url']) : ''; ?>"
+                                            required class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                                        <textarea name="description" rows="5"
+                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary"><?php echo $website ? htmlspecialchars($website['description']) : ''; ?></textarea>
+                                    </div>
+
+                                    <div class="flex items-center gap-4">
+                                        <button type="submit"
+                                            class="flex-1 bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors">
+                                            <?php echo $action === 'create' ? 'Create' : 'Update'; ?> Website
+                                        </button>
+                                        <a href="websites.php"
+                                            class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                                            Cancel
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </section>
                     </div>
-                <?php endif; ?>
             </div>
         </main>
     </div>
+    <script>
+        (function() {
+            const backdrop = document.getElementById('websites-drawer-backdrop');
+            const closeDrawer = () => window.location.href = 'websites.php';
+            if (backdrop) {
+                backdrop.addEventListener('click', closeDrawer);
+            }
+            document.addEventListener('keydown', (event) => {
+                if (<?php echo $drawerOpen ? 'true' : 'false'; ?> && event.key === 'Escape') {
+                    closeDrawer();
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>
