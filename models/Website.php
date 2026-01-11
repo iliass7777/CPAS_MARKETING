@@ -10,19 +10,34 @@ class Website {
         $this->db = $database->getConnection();
     }
 
-    public function getAll($limit,$offset) {
+    public function getAll($limit = null, $offset = 0) {
         $sql = "SELECT w.*, c.name as category_name, c.slug as category_slug 
                 FROM websites w 
                 LEFT JOIN categories c ON w.category_id = c.id 
-                ORDER BY w.rating DESC, w.name ASC  LIMIT $limit OFFSET $offset";
-        $result = $this->db->query($sql);
-        $websites = [];
-        if ($result) {
-            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                $websites[] = $row;
-            }
+                ORDER BY w.rating DESC, w.name ASC";
+
+        $params = [];
+        if ($limit !== null) {
+            $limit = max(1, (int)$limit);
+            $offset = max(0, (int)$offset);
+            $sql .= " LIMIT :limit OFFSET :offset";
+            $params = [
+                ':limit' => $limit,
+                ':offset' => $offset,
+            ];
         }
-        
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            return [];
+        }
+
+        $stmt->execute($params);
+        $websites = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $websites[] = $row;
+        }
+
         return $websites;
     }
 
