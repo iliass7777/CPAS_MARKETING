@@ -15,6 +15,6 @@ RUN mkdir -p /var/www/html/db \
     && chmod -R 775 /var/www/html/db
 
 
-EXPOSE 80
+EXPOSE 9999
 
-CMD [ "php","-S","0.0.0.0:80" ]
+CMD [ "php","-S","0.0.0.0:9999" ]
