@@ -1,6 +1,6 @@
 FROM php:8.5-apache
 
-# Installer sqlite dev lib puis activer pdo_sqlite
+# Installer SQLite + PDO
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends libsqlite3-dev \
 	&& docker-php-ext-install pdo pdo_sqlite \
@@ -11,6 +11,9 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html
 
-EXPOSE 80
+RUN mkdir -p /var/www/html/db \
+    && chown -R www-data:www-data /var/www/html/db \
+    && chmod -R 775 /var/www/html/db
 
-# Apache est lancé automatiquement dans l'image officielle
+
+EXPOSE 80
