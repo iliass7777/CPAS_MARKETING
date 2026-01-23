@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Veuillez remplir tous les champs.';
     } else {
         $user = $userModel->authenticate($username, $password);
-
+      
         if ($user) {
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
