@@ -1,4 +1,12 @@
 <?php
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
+}
+
 require_once __DIR__ . '/../models/Website.php';
 require_once __DIR__ . '/../models/Category.php';
 require_once __DIR__ . '/../models/Review.php';
@@ -129,6 +137,8 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
             },
         }
     </script>
+    <!-- Custom JS -->
+    <script src="../public/assets/js/custom.js"></script>
     <style>
         body {
             font-family: 'Lexend', sans-serif;
@@ -177,15 +187,19 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
                 </nav>
                 <!-- Profile Footer -->
                 <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 mb-3">
                         <div class="size-10 rounded-full bg-cover bg-center bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                             <span class="material-symbols-outlined text-gray-400">person</span>
                         </div>
                         <div class="flex flex-col overflow-hidden">
-                            <p class="text-sm font-bold text-gray-900 dark:text-white truncate">Admin User</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">admin@platform.com</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white truncate"><?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Admin User'); ?></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate"><?php echo htmlspecialchars($_SESSION['email'] ?? 'admin@platform.com'); ?></p>
                         </div>
                     </div>
+                    <a href="logout.php" class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">logout</span>
+                        <span class="text-sm font-medium">Logout</span>
+                    </a>
                 </div>
             </div>
         </aside>
@@ -211,6 +225,10 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
                     <button
                         class="flex items-center justify-center size-10 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                         <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <span class="material-symbols-outlined text-xl text-gray-700 dark:text-gray-300">dark_mode</span>
                     </button>
                     <a href="?action=create"
                         class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm tracking-wide hover:bg-primary/90 transition-colors">

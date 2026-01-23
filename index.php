@@ -138,7 +138,10 @@ function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCa
                     <a class="text-sm font-medium hover:text-primary" href="#">Top Leaders</a>
                     <a class="text-sm font-medium hover:text-primary" href="#">Community</a>
                 </nav>
-            
+                <!-- Dark Mode Toggle -->
+                <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                    <span class="material-symbols-outlined text-xl">dark_mode</span>
+                </button>
             </div>
         </div>
     </header>

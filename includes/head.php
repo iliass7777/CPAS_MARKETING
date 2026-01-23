@@ -17,6 +17,8 @@
         rel="stylesheet" />
     <!-- Tailwind Config JS -->
     <script src="public/assets/js/tailwind-config.js"></script>
+    <!-- Custom JS -->
+    <script src="public/assets/js/custom.js"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="public/assets/css/style.css" />
 </head>
