@@ -30,12 +30,12 @@ $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Admin Back-Office - Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap"
+    <link href="../public/assets/css/lexend.css"
         rel="stylesheet" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        href="../public/assets/css/material-symbols.css"
         rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="../public/assets/js/tailwind.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",

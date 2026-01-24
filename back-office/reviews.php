@@ -22,7 +22,28 @@ $status = isset($_GET['status']) ? $_GET['status'] : 'all';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['update_status'])) {
+    if (isset($_POST['create'])) {
+        $websiteId = (int)$_POST['website_id'];
+        $authorName = trim($_POST['author_name']);
+        $authorEmail = trim($_POST['author_email']);
+        $rating = (int)$_POST['rating'];
+        $comment = trim($_POST['comment']);
+        
+        if (empty($authorName) || $rating < 1 || $rating > 5 || $websiteId <= 0) {
+            $message = 'Name, valid rating, and website are required.';
+            $messageType = 'error';
+        } else {
+            $result = $reviewModel->create($websiteId, $authorName, $authorEmail, $rating, $comment);
+            if ($result) {
+                $message = 'Review created successfully!';
+                $messageType = 'success';
+                $action = 'list';
+            } else {
+                $message = 'Failed to create review.';
+                $messageType = 'error';
+            }
+        }
+    } elseif (isset($_POST['update_status'])) {
         $id = (int)$_POST['id'];
         $newStatus = $_POST['status'];
         
@@ -97,7 +118,9 @@ if ($action === 'edit' && $id > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Back Office - Reviews</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="../public/assets/css/lexend.css" rel="stylesheet" />
+    <link href="../public/assets/css/material-symbols.css" rel="stylesheet" />
+    <script src="../public/assets/js/tailwind.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -143,7 +166,10 @@ if ($action === 'edit' && $id > 0) {
     <?php endif; ?>
     
     <?php if ($action === 'list'): ?>
-        <h2 class="text-2xl font-bold mb-4">All Reviews</h2>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">All Reviews</h2>
+            <a href="?action=create" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">Create Review</a>
+        </div>
         
         <div class="mb-6">
             <p class="mb-2">Filter by status:</p>
@@ -227,6 +253,54 @@ if ($action === 'edit' && $id > 0) {
                 <?php endforeach; ?>
             </table>
         <?php endif; ?>
+        
+    <?php elseif ($action === 'create'): ?>
+        <h2 class="text-2xl font-bold mb-4">Create Review</h2>
+        <p class="mb-4"><a href="reviews.php" class="text-primary hover:underline">← Back to List</a></p>
+        
+        <form method="POST" class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-300 dark:border-gray-600">
+            <input type="hidden" name="create" value="1">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website: *</label>
+                <select name="website_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required>
+                    <option value="">Select a website</option>
+                    <?php
+                    $websites = $websiteModel->getAll();
+                    foreach ($websites as $website): ?>
+                        <option value="<?php echo $website['id']; ?>"><?php echo htmlspecialchars($website['name']); ?> (<?php echo htmlspecialchars($website['url']); ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Author Name: *</label>
+                <input type="text" name="author_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Author Email:</label>
+                <input type="email" name="author_email" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rating: *</label>
+                <select name="rating" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required>
+                    <option value="1">1 - Poor</option>
+                    <option value="2">2 - Fair</option>
+                    <option value="3" selected>3 - Good</option>
+                    <option value="4">4 - Very Good</option>
+                    <option value="5">5 - Excellent</option>
+                </select>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comment:</label>
+                <textarea name="comment" rows="5" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea>
+            </div>
+            
+            <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">Create Review</button>
+        </form>
         
     <?php elseif ($action === 'edit'): ?>
         <h2>Edit Review</h2>
