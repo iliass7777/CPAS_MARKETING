@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Check if user is already logged in
 if (isset($_SESSION['user_id'])) {
     header('Location: back-office/index.php');
     exit;
@@ -19,7 +18,7 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
+    $username = trim(isset($_POST['username']) );
     $password = $_POST['password'] ?? '';
 
     if (empty($username) || empty($password)) {
@@ -48,12 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="max-w-md w-full space-y-8">
         <!-- Header -->
         <div class="text-center">
-            <div class="flex items-center justify-center gap-3 mb-6">
-                <div class="text-primary">
-                    <span class="material-symbols-outlined text-4xl">hub</span>
-                </div>
-                <h1 class="text-3xl font-bold tracking-tight text-[#111418] dark:text-white">ResourceHub</h1>
-            </div>
+           
             <h2 class="text-2xl font-bold text-[#111418] dark:text-white">Connexion Back-Office</h2>
             <p class="mt-2 text-sm text-[#617589] dark:text-gray-400">
                 Connectez-vous pour accéder au panneau d'administration
