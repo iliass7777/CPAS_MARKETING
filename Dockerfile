@@ -1,6 +1,5 @@
 FROM php:8.5
 
-# Installer SQLite + PDO
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends libsqlite3-dev \
 	&& docker-php-ext-install pdo pdo_sqlite \
@@ -8,13 +7,13 @@ RUN apt-get update \
 
 WORKDIR /var/www/html
 
-COPY . /var/www/html
+COPY . .
 
 RUN mkdir -p /var/www/html/db \
     && chown -R www-data:www-data /var/www/html/db \
     && chmod -R 775 /var/www/html/db
 
 
-EXPOSE 80
+EXPOSE 9999
 
-CMD [ "php","-S","0.0.0.0:80" ]
+CMD [ "php","-S","0.0.0.0:9999" ]

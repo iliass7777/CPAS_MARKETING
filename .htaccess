@@ -1,1 +1,93 @@
-#
+# Enable Rewrite Engine
+RewriteEngine On
+
+# Force HTTPS (uncomment if SSL is available)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Remove .php extension from URLs
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.php(\?[^\s]*)?\s [NC]
+RewriteCond %{REQUEST_URI} !send\.php$ [NC]
+# Exclure les requêtes AJAX (détectées par le header)
+RewriteCond %{HTTP:X-Requested-With} !XMLHttpRequest
+# Exclure les requêtes avec Content-Type application/json (API)
+RewriteCond %{HTTP:Content-Type} !application/json
+RewriteRule ^ /%1%2? [R=301,L]
+
+# Add .php extension internally
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L]
+
+# Redirect /admin to /admin/login.php
+RewriteRule ^admin/?$ /admin/login.php [R=301,L]
+
+# Protect sensitive directories - deny direct access
+RewriteRule ^config/ - [F,L]
+RewriteRule ^db/ - [F,L]
+RewriteRule ^includes/ - [F,L]
+RewriteRule ^services/ - [F,L]
+RewriteRule ^email-templates/ - [F,L]
+RewriteRule ^PHPMailer/ - [F,L]
+RewriteRule ^components/ - [F,L]
+RewriteRule ^_back_up/ - [F,L]
+
+# Gérer le cas de la page d'accueil (index)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^/?$
+RewriteCond %{DOCUMENT_ROOT}/index.php -f
+RewriteRule ^$ index.php [L]
+
+# Security Headers
+<IfModule mod_headers.c>
+    # XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+    # Prevent MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    # Clickjacking protection
+    Header set X-Frame-Options "SAMEORIGIN"
+    # Referrer Policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Enable Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Browser Caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType text/html "access plus 0 seconds"
+    # Fonts caching - 1 year
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/otf "access plus 1 year"
+    ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
+    ExpiresByType font/eot "access plus 1 year"
+</IfModule>
+# Cache-Control Headers
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|css|js)$">
+        Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
+    # Fonts cache control - 1 year
+    <FilesMatch "\.(woff|woff2|ttf|otf|eot)$">
+        Header set Cache-Control "max-age=31536000, public, immutable"
+    </FilesMatch>
+</IfModule>

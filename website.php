@@ -122,6 +122,8 @@ function formatReviewCount($count) {
             },
         }
     </script>
+    <!-- Custom JS -->
+    <script src="public/assets/js/custom.js"></script>
     <style>
         body {
             font-family: 'Lexend', sans-serif;
@@ -179,6 +181,10 @@ function formatReviewCount($count) {
                                 placeholder="Search resources..." />
                         </div>
                     </label>
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <span class="material-symbols-outlined text-xl text-gray-700 dark:text-gray-300">dark_mode</span>
+                    </button>
                     <a href="back-office/index.php"
                         class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold">
                         <span>Sign Up</span>
