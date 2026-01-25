@@ -43,7 +43,7 @@ class User {
         $stmt->execute([$email]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
     }
-
+// TO CHECK 
     public function authenticate($username, $password) {
         $user = $this->getByUsername($username);
         
