@@ -60,21 +60,36 @@ $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
         body {
             font-family: 'Lexend', sans-serif;
         }
+        #sidebar {
+            transition: width 0.3s ease;
+        }
+        #sidebar.collapsed {
+            width: 4rem;
+        }
+        #sidebar.collapsed .sidebar-text {
+            display: none;
+        }
     </style>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark min-h-screen">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Navigation -->
-        <aside
+        <aside id="sidebar"
             class="w-64 bg-white dark:bg-background-dark border-r border-gray-200 dark:border-gray-800 flex flex-col">
             <div class="p-6 flex flex-col gap-8 h-full">
+                <!-- Toggle Button -->
+                <div class="flex justify-end">
+                    <button id="sidebar-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <span class="material-symbols-outlined text-xl text-gray-700 dark:text-gray-300">menu</span>
+                    </button>
+                </div>
                 <!-- Brand -->
                 <div class="flex items-center gap-3">
                     <div class="bg-primary size-10 rounded-lg flex items-center justify-center text-white">
                         <span class="material-symbols-outlined">auto_stories</span>
                     </div>
-                    <div class="flex flex-col">
+                    <div class="flex flex-col sidebar-text">
                         <h1 class="text-gray-900 dark:text-white text-base font-bold leading-tight">Admin Portal</h1>
                         <p class="text-gray-500 dark:text-gray-400 text-xs font-normal">Back-Office v1.0</p>
                     </div>
@@ -83,22 +98,22 @@ $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
                 <nav class="flex flex-col gap-1 grow">
                     <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="index.php">
                         <span class="material-symbols-outlined text-[24px]">dashboard</span>
-                        <p class="text-sm font-semibold">Dashboard</p>
+                        <p class="text-sm font-semibold sidebar-text">Dashboard</p>
                     </a>
                     <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         href="websites.php">
                         <span class="material-symbols-outlined text-[24px]">database</span>
-                        <p class="text-sm font-medium">Resources</p>
+                        <p class="text-sm font-medium sidebar-text">Resources</p>
                     </a>
                     <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         href="categories.php">
                         <span class="material-symbols-outlined text-[24px]">folder</span>
-                        <p class="text-sm font-medium">Categories</p>
+                        <p class="text-sm font-medium sidebar-text">Categories</p>
                     </a>
                     <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         href="reviews.php">
                         <span class="material-symbols-outlined text-[24px]">chat_bubble</span>
-                        <p class="text-sm font-medium">User Feedback</p>
+                        <p class="text-sm font-medium sidebar-text">User Feedback</p>
                     </a>
                 </nav>
                 <!-- Profile Footer -->
@@ -107,14 +122,14 @@ $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
                         <div class="size-10 rounded-full bg-cover bg-center bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                             <span class="material-symbols-outlined text-gray-400">person</span>
                         </div>
-                        <div class="flex flex-col overflow-hidden">
+                        <div class="flex flex-col overflow-hidden sidebar-text">
                             <p class="text-sm font-bold text-gray-900 dark:text-white truncate"><?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Admin User'); ?></p>
                             <p class="text-xs text-gray-500 dark:text-gray-400 truncate"><?php echo htmlspecialchars($_SESSION['email'] ?? 'admin@platform.com'); ?></p>
                         </div>
                     </div>
                     <a href="logout.php" class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                         <span class="material-symbols-outlined text-[20px]">logout</span>
-                        <span class="text-sm font-medium">Logout</span>
+                        <span class="text-sm font-medium sidebar-text">Logout</span>
                     </a>
                 </div>
             </div>
@@ -237,6 +252,11 @@ $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
             </div>
         </main>
     </div>
+    <script>
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+    </script>
 </body>
 
 </html>
