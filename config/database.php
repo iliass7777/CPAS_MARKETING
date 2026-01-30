@@ -53,6 +53,7 @@ class Database {
         CREATE TABLE IF NOT EXISTS reviews (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             website_id INTEGER NOT NULL,
+            user_id INTEGER,
             author_name VARCHAR(255) NOT NULL,
             author_email VARCHAR(255),
             rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
@@ -60,7 +61,8 @@ class Database {
             status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE
+            FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
         );
 
         -- Users table (for back office only)
@@ -70,7 +72,7 @@ class Database {
             email VARCHAR(255) NOT NULL UNIQUE,
             password VARCHAR(255) NOT NULL,
             full_name VARCHAR(255),
-            role TEXT DEFAULT 'editor' CHECK (role IN ('admin', 'editor')),
+            role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'editor', 'user')),
             is_active INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

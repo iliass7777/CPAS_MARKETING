@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS websites (
 CREATE TABLE IF NOT EXISTS reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
     website_id INT NOT NULL,
+    user_id INT,
     author_name VARCHAR(255) NOT NULL,
     author_email VARCHAR(255),
     rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
@@ -52,7 +53,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
-    role ENUM('admin', 'editor') DEFAULT 'editor',
+    role ENUM('admin', 'editor', 'user') DEFAULT 'user',
     is_active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

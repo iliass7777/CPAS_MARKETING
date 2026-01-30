@@ -14,7 +14,7 @@ class Website {
         $sql = "SELECT w.*, c.name as category_name, c.slug as category_slug 
                 FROM websites w 
                 LEFT JOIN categories c ON w.category_id = c.id 
-                ORDER BY w.rating DESC, w.name ASC";
+                ORDER BY w.total_ratings DESC, w.rating DESC, w.name ASC";
 
         $params = [];
         if ($limit !== null) {
@@ -55,7 +55,7 @@ class Website {
                 FROM websites w 
                 LEFT JOIN categories c ON w.category_id = c.id 
                 WHERE w.category_id = ? 
-                ORDER BY w.rating DESC, w.name ASC");
+                ORDER BY w.total_ratings DESC, w.rating DESC, w.name ASC");
         $stmt->execute([$categoryId]);
         $websites = [];
         
@@ -118,7 +118,7 @@ class Website {
                 FROM websites w 
                 LEFT JOIN categories c ON w.category_id = c.id 
                 WHERE w.name LIKE ? OR w.description LIKE ?
-                ORDER BY w.rating DESC, w.name ASC 
+                ORDER BY w.total_ratings DESC, w.rating DESC, w.name ASC 
                 LIMIT {$limit} OFFSET {$offset}";
         
         try {
@@ -135,6 +135,95 @@ class Website {
             error_log("Error in Website::search(): " . $e->getMessage());
             return [];
         }
+        }
+
+
+    public function getWebsites($filters = [], $limit = null, $offset = 0) {
+        $sql = "SELECT w.*, c.name as category_name, c.slug as category_slug 
+                FROM websites w 
+                LEFT JOIN categories c ON w.category_id = c.id 
+                WHERE 1=1";
+        
+        $params = [];
+        
+        // Search
+        if (!empty($filters['search'])) {
+            $sql .= " AND (w.name LIKE ? OR w.description LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        // Category
+        if (!empty($filters['category_id'])) {
+            $sql .= " AND w.category_id = ?";
+            $params[] = $filters['category_id'];
+        }
+        
+        // Min Rating
+        if (!empty($filters['min_rating'])) {
+            $sql .= " AND w.rating >= ?";
+            $params[] = $filters['min_rating'];
+        }
+        
+        // Sorting
+        $sort = $filters['sort'] ?? 'popular';
+        if ($sort === 'top_rated') {
+            $sql .= " ORDER BY w.rating DESC, w.total_ratings DESC";
+        } elseif ($sort === 'newest') {
+             $sql .= " ORDER BY w.created_at DESC";
+        } else { // popular (default)
+             $sql .= " ORDER BY w.total_ratings DESC, w.rating DESC";
+        }
+         
+        // Pagination
+        if ($limit !== null) {
+            $limit = max(1, (int)$limit);
+            $offset = max(0, (int)$offset);
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        
+        $websites = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $websites[] = $row;
+        }
+        
+        return $websites;
+    }
+
+    public function getWebsitesCount($filters = []) {
+        $sql = "SELECT COUNT(*) as total 
+                FROM websites w 
+                LEFT JOIN categories c ON w.category_id = c.id 
+                WHERE 1=1";
+        
+        $params = [];
+        
+        if (!empty($filters['search'])) {
+            $sql .= " AND (w.name LIKE ? OR w.description LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        if (!empty($filters['category_id'])) {
+            $sql .= " AND w.category_id = ?";
+            $params[] = $filters['category_id'];
+        }
+        
+        if (!empty($filters['min_rating'])) {
+            $sql .= " AND w.rating >= ?";
+            $params[] = $filters['min_rating'];
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $row ? (int)$row['total'] : 0;
     }
 }
 

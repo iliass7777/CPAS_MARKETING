@@ -11,9 +11,10 @@ class Review {
     }
 
     public function getAll() {
-        $sql = "SELECT r.*, w.name as website_name, w.url as website_url 
+        $sql = "SELECT r.*, w.name as website_name, w.url as website_url, u.username as user_username 
                 FROM reviews r 
                 LEFT JOIN websites w ON r.website_id = w.id 
+                LEFT JOIN users u ON r.user_id = u.id
                 ORDER BY r.created_at DESC";
         $result = $this->db->query($sql);
         $reviews = [];
@@ -50,17 +51,17 @@ class Review {
         return $reviews;
     }
 
-    public function create($websiteId, $authorName, $authorEmail, $rating, $comment) {
+    public function create($websiteId, $authorName, $authorEmail, $rating, $comment, $userId = null) {
         $rating = (int)$rating;
         
         if ($rating < 1 || $rating > 5) {
             return false;
         }
         
-        $stmt = $this->db->prepare("INSERT INTO reviews (website_id, author_name, author_email, rating, comment) 
-                VALUES (?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO reviews (website_id, user_id, author_name, author_email, rating, comment) 
+                VALUES (?, ?, ?, ?, ?, ?)");
         
-        if ($stmt->execute([$websiteId, $authorName, $authorEmail, $rating, $comment])) {
+        if ($stmt->execute([$websiteId, $userId, $authorName, $authorEmail, $rating, $comment])) {
             return $this->db->lastInsertId();
         }
         

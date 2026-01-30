@@ -18,6 +18,10 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
     $success = 'Vous avez été déconnecté avec succès.';
 }
 
+if (isset($_GET['registered']) && $_GET['registered'] == '1') {
+    $success = 'Inscription réussie ! Veuillez vous connecter.';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -35,8 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['role'] = $user['role'];
             $_SESSION['email'] = $user['email'];
 
-            // Redirect to back-office
-            header('Location: back-office/index.php');
+            // Redirect based on role
+            if ($user['role'] === 'admin' || $user['role'] === 'editor') {
+                header('Location: back-office/index.php');
+            } else {
+                header('Location: index.php');
+            }
             exit;
         } else {
             $error = 'Nom d\'utilisateur ou mot de passe incorrect.';
@@ -131,6 +139,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
 
      
+        </div>
+
+        <!-- Register Link -->
+        <div class="text-center mt-4">
+            <p class="text-sm text-[#617589] dark:text-gray-400">
+                Pas encore de compte ? 
+                <a href="register.php" class="text-primary font-bold hover:underline">S'inscrire</a>
+            </p>
         </div>
 
         <!-- Back to Home -->

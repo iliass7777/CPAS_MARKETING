@@ -110,6 +110,11 @@ $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
                         <span class="material-symbols-outlined text-[24px]">folder</span>
                         <p class="text-sm font-medium sidebar-text">Categories</p>
                     </a>
+                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        href="reviews.php">
+                        <span class="material-symbols-outlined text-[24px]">rate_review</span>
+                        <p class="text-sm font-medium sidebar-text">Reviews</p>
+                    </a>
                   
                 </nav>
                 <!-- Profile Footer -->

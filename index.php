@@ -8,36 +8,28 @@ $websiteModel = new Website();
 // Get all categories
 $categories = $categoryModel->getAll();
 
-// Get search term
+// Get filters
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 $selectedCategoryId = isset($_GET['category']) ? (int)$_GET['category'] : null;
 $selectedCategorySlug = isset($_GET['category_slug']) ? $_GET['category_slug'] : null;
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'popular';
+$minRating = isset($_GET['min_rating']) ? (int)$_GET['min_rating'] : 0;
 
-$itemsPerPage = 6; // Nombre d'éléments par page
-$currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1; // Page actuelle (minimum 1)
-$offset = ($currentPage - 1) * $itemsPerPage; // Calcul de l'offset
+$filters = [
+    'search' => $searchTerm,
+    'category_id' => $selectedCategoryId,
+    'sort' => $sort,
+    'min_rating' => $minRating
+];
 
-// Get websites - priority: search > category > all
-if (!empty($searchTerm)) {
-    // Si une recherche est effectuée, rechercher dans tous les sites
-    $allWebsites = $websiteModel->search($searchTerm, 9999, 0);
-    $websites = array_slice($allWebsites, $offset, $itemsPerPage);
-    $totalWebsites = count($allWebsites);
-} elseif ($selectedCategoryId) {
-    // Si une catégorie est sélectionnée, récupérer tous les sites de cette catégorie
-    $allWebsites = $websiteModel->getByCategory($selectedCategoryId);
-    // Appliquer la pagination manuellement pour les catégories
-    $websites = array_slice($allWebsites, $offset, $itemsPerPage);
-    $totalWebsites = count($allWebsites);
-} else {
-    // Récupérer tous les sites avec pagination
-    $websites = $websiteModel->getAll($itemsPerPage, $offset);
-    // Pour obtenir le total, on récupère tous les sites sans limite
-    $allWebsites = $websiteModel->getAll(9999, 0);
-    $totalWebsites = count($allWebsites);
-}
+$itemsPerPage = 6;
+$currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$offset = ($currentPage - 1) * $itemsPerPage;
 
-// Calcul du nombre total de pages
+// Get websites using the new versatile method
+$websites = $websiteModel->getWebsites($filters, $itemsPerPage, $offset);
+$totalWebsites = $websiteModel->getWebsitesCount($filters);
+
 $totalPages = ceil($totalWebsites / $itemsPerPage);
 
 // Icon mapping for categories
@@ -81,21 +73,43 @@ function formatRating($rating) {
     return number_format((float)$rating, 1);
 }
 
-function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCategorySlug) {
+function buildPaginationUrl($page, $filters) {
     $params = [];
-    if (!empty($searchTerm)) {
-        $params[] = 'search=' . urlencode($searchTerm);
+    if (!empty($filters['search'])) {
+        $params[] = 'search=' . urlencode($filters['search']);
     }
-    if ($selectedCategoryId) {
-        $params[] = 'category=' . $selectedCategoryId;
-        if ($selectedCategorySlug) {
-            $params[] = 'category_slug=' . urlencode($selectedCategorySlug);
+    if (!empty($filters['category_id'])) {
+        $params[] = 'category=' . $filters['category_id'];
+        // Note: category_slug might be missing here if not passed in filters but strictly only needed for URL prettiness or handled
+        if (isset($_GET['category_slug'])) {
+            $params[] = 'category_slug=' . urlencode($_GET['category_slug']);
         }
     }
+    if (!empty($filters['sort']) && $filters['sort'] !== 'popular') {
+        $params[] = 'sort=' . $filters['sort'];
+    }
+    if (!empty($filters['min_rating'])) {
+        $params[] = 'min_rating=' . $filters['min_rating'];
+    }
+    
     if ($page > 1) {
         $params[] = 'page=' . $page;
     }
     return 'index.php' . (!empty($params) ? '?' . implode('&', $params) : '');
+}
+
+function buildFilterUrl($key, $value) {
+    $params = $_GET;
+    // Update or add the filter
+    if ($value === null) {
+        unset($params[$key]);
+    } else {
+        $params[$key] = $value;
+    }
+    // Reset page when filtering
+    unset($params['page']);
+    
+    return 'index.php' . (!empty($params) ? '?' . http_build_query($params) : '');
 }
 ?>
 <?php include __DIR__ . '/includes/head.php'; ?>
@@ -150,17 +164,21 @@ function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCa
                         <div>
                             <h3 class="text-sm font-bold uppercase tracking-wider text-[#617589] mb-4">Filters</h3>
                             <div class="flex flex-col gap-1">
-                                <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-bold transition-colors"
+                                <a class="flex items-center gap-3 px-3 py-2 rounded-lg <?php echo $sort === 'popular' && empty($minRating) ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-background-light dark:hover:bg-gray-800 text-[#617589] dark:text-gray-300 font-medium'; ?> transition-colors"
                                     href="index.php">
                                     <span class="material-symbols-outlined">auto_awesome</span> All Resources
                                 </a>
-                                <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-background-light dark:hover:bg-gray-800 text-[#617589] dark:text-gray-300 font-medium transition-colors"
-                                    href="#">
+                                <a class="flex items-center gap-3 px-3 py-2 rounded-lg <?php echo $sort === 'top_rated' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-background-light dark:hover:bg-gray-800 text-[#617589] dark:text-gray-300 font-medium'; ?> transition-colors"
+                                    href="<?php echo buildFilterUrl('sort', 'top_rated'); ?>">
                                     <span class="material-symbols-outlined">stars</span> Top Rated
                                 </a>
-                                <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-background-light dark:hover:bg-gray-800 text-[#617589] dark:text-gray-300 font-medium transition-colors"
-                                    href="#">
+                                <a class="flex items-center gap-3 px-3 py-2 rounded-lg <?php echo $sort === 'popular' && !empty($minRating) ? '' : ($sort === 'popular' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-background-light dark:hover:bg-gray-800 text-[#617589] dark:text-gray-300 font-medium'); ?> transition-colors"
+                                    href="<?php echo buildFilterUrl('sort', 'popular'); ?>">
                                     <span class="material-symbols-outlined">trending_up</span> Most Popular
+                                </a>
+                                <a class="flex items-center gap-3 px-3 py-2 rounded-lg <?php echo $sort === 'newest' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-background-light dark:hover:bg-gray-800 text-[#617589] dark:text-gray-300 font-medium'; ?> transition-colors"
+                                    href="<?php echo buildFilterUrl('sort', 'newest'); ?>">
+                                    <span class="material-symbols-outlined">new_releases</span> Newest
                                 </a>
                             </div>
                         </div>
@@ -168,7 +186,7 @@ function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCa
                         <div>
                             <h3 class="text-sm font-bold uppercase tracking-wider text-[#617589] mb-4">Rating</h3>
                             <div class="flex flex-col gap-2">
-                                <button class="flex items-center justify-between group">
+                                <a href="<?php echo buildFilterUrl('min_rating', 4); ?>" class="flex items-center justify-between group <?php echo $minRating == 4 ? 'bg-primary/5 rounded-lg p-1' : ''; ?>">
                                     <div class="flex text-yellow-500">
                                         <span class="material-symbols-outlined fill-1">star</span>
                                         <span class="material-symbols-outlined fill-1">star</span>
@@ -176,9 +194,9 @@ function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCa
                                         <span class="material-symbols-outlined fill-1">star</span>
                                         <span class="material-symbols-outlined">star</span>
                                     </div>
-                                    <span class="text-xs text-[#617589] font-medium">&amp; Up</span>
-                                </button>
-                                <button class="flex items-center justify-between group">
+                                    <span class="text-xs text-[#617589] font-medium group-hover:text-primary transition-colors">&amp; Up</span>
+                                </a>
+                                <a href="<?php echo buildFilterUrl('min_rating', 3); ?>" class="flex items-center justify-between group <?php echo $minRating == 3 ? 'bg-primary/5 rounded-lg p-1' : ''; ?>">
                                     <div class="flex text-yellow-500">
                                         <span class="material-symbols-outlined fill-1">star</span>
                                         <span class="material-symbols-outlined fill-1">star</span>
@@ -186,8 +204,8 @@ function buildPaginationUrl($page, $searchTerm, $selectedCategoryId, $selectedCa
                                         <span class="material-symbols-outlined">star</span>
                                         <span class="material-symbols-outlined">star</span>
                                     </div>
-                                    <span class="text-xs text-[#617589] font-medium">& Up</span>
-                                </button>
+                                    <span class="text-xs text-[#617589] font-medium group-hover:text-primary transition-colors">& Up</span>
+                                </a>
                             </div>
                         </div>
                     </div>

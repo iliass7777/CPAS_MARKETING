@@ -119,7 +119,7 @@ $drawerTitle = $action === 'edit' ? 'Edit Category' : 'Create Category';
         }
     </script>
     <!-- AJAX API Client -->
-    <script src="../public/assets/js/api-client.js"></script>
+
     <!-- Custom JS -->
     <script src="../public/assets/js/custom.js"></script>
     <style>
@@ -156,7 +156,7 @@ $drawerTitle = $action === 'edit' ? 'Edit Category' : 'Create Category';
                     </a>
                     <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         href="reviews.php">
-                        <span class="material-symbols-outlined text-[24px]">chat_bubble</span>
+                        <span class="material-symbols-outlined text-[24px]">rate_review</span>
                         <p class="text-sm font-medium">Reviews</p>
                     </a>
                     <div class="my-4 border-t border-gray-100 dark:border-gray-800"></div>

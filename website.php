@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/models/Website.php';
 require_once __DIR__ . '/models/Review.php';
 
@@ -25,15 +26,22 @@ $reviewSubmitted = false;
 $reviewError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: login.php');
+        exit;
+    }
+
     $authorName = isset($_POST['author_name']) ? trim($_POST['author_name']) : '';
     $authorEmail = isset($_POST['author_email']) ? trim($_POST['author_email']) : '';
     $rating = isset($_POST['rating']) ? (int)$_POST['rating'] : 0;
     $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
+    $userId = $_SESSION['user_id'];
     
     if (empty($authorName) || $rating < 1 || $rating > 5) {
         $reviewError = 'Please fill in all required fields with valid data.';
     } else {
-        $result = $reviewModel->create($websiteId, $authorName, $authorEmail, $rating, $comment);
+        $result = $reviewModel->create($websiteId, $authorName, $authorEmail, $rating, $comment, $userId);
         if ($result) {
             $reviewSubmitted = true;
             $websiteModel->updateRating($websiteId);
@@ -255,6 +263,7 @@ $pageTitle = htmlspecialchars($website['name']) . ' - ResourceHub';
                                 <?php endif; ?>
                                 
                                 <!-- Review Form -->
+                                <?php if (isset($_SESSION['user_id'])): ?>
                                 <div id="review-form" class="bg-white dark:bg-background-dark p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
                                     <h4 class="text-gray-900 dark:text-white text-lg font-bold mb-4">Write a Review</h4>
                                     <form method="POST" action="">
@@ -263,14 +272,16 @@ $pageTitle = htmlspecialchars($website['name']) . ' - ResourceHub';
                                         <div class="flex flex-col gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Name *</label>
-                                                <input type="text" name="author_name" required
-                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                                <input type="text" name="author_name" required readonly
+                                                    value="<?php echo htmlspecialchars($_SESSION['username'] ?? ''); ?>"
+                                                    class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2 text-gray-500 dark:text-gray-400 cursor-not-allowed">
                                             </div>
                                             
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Email</label>
-                                                <input type="email" name="author_email"
-                                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                                <input type="email" name="author_email" readonly
+                                                    value="<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>"
+                                                    class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2 text-gray-500 dark:text-gray-400 cursor-not-allowed">
                                             </div>
                                             
                                             <div>
@@ -299,6 +310,17 @@ $pageTitle = htmlspecialchars($website['name']) . ' - ResourceHub';
                                         </div>
                                     </form>
                                 </div>
+                                <?php else: ?>
+                                <div id="review-form" class="bg-gray-50 dark:bg-gray-800/50 p-8 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm text-center">
+                                    <span class="material-symbols-outlined text-4xl text-gray-400 mb-4">lock</span>
+                                    <h4 class="text-gray-900 dark:text-white text-lg font-bold mb-2">Log in to review</h4>
+                                    <p class="text-gray-600 dark:text-gray-400 mb-6">Share your experience with the community. You must be logged in to submit a review.</p>
+                                    <div class="flex justify-center gap-4">
+                                        <a href="login.php" class="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-primary/90 transition-colors">Log In</a>
+                                        <a href="register.php" class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">Register</a>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
                                 
                                 <!-- Review Cards -->
                                 <div class="space-y-4">

@@ -28,12 +28,24 @@
                     autocomplete="off" />
             </form>
         </div>
-        <!-- Nav Actions -->
         <div class="flex items-center gap-6">
             <nav class="hidden md:flex items-center gap-6">
                 <a class="text-sm font-medium hover:text-primary" href="index.php">Explore</a>
-                <a class="text-sm font-medium hover:text-primary" href="#">Top Leaders</a>
-                <a class="text-sm font-medium hover:text-primary" href="#">Community</a>
+                
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm font-medium text-[#111418] dark:text-white">
+                            <?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?>
+                        </span>
+                        <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'editor')): ?>
+                            <a class="text-sm font-medium hover:text-primary" href="back-office/index.php">Dashboard</a>
+                        <?php endif; ?>
+                        <a class="text-sm font-medium text-red-600 hover:underline" href="login.php?logout=1">Logout</a>
+                    </div>
+                <?php else: ?>
+                    <a class="text-sm font-medium hover:text-primary" href="login.php">Login</a>
+                    <a class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors" href="register.php">Register</a>
+                <?php endif; ?>
             </nav>
             <!-- Dark Mode Toggle -->
             <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
