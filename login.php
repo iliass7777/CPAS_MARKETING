@@ -130,17 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </form>
 
-            <!-- Demo Credentials -->
-            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <div class="flex items-start">
-                    <span class="material-symbols-outlined text-blue-500 mr-2 mt-0.5">info</span>
-                    <div class="text-sm">
-                        <p class="font-medium text-blue-700 dark:text-blue-400 mb-1">Identifiants de démonstration :</p>
-                        <p class="text-blue-600 dark:text-blue-500">Utilisateur : <strong>admin</strong></p>
-                        <p class="text-blue-600 dark:text-blue-500">Mot de passe : <strong>admin123</strong></p>
-                    </div>
-                </div>
-            </div>
+     
         </div>
 
         <!-- Back to Home -->

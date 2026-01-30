@@ -98,7 +98,7 @@ if ($action === 'edit' && $id > 0) {
 }));
 $totalCategories = count($categories);
 $drawerOpen = in_array($action, ['create', 'edit']);
-$drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
+$drawerTitle = $action === 'edit' ? 'Edit Resource' : 'Add New Resource';
 ?>
 <!DOCTYPE html>
 
@@ -134,6 +134,8 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
             },
         }
     </script>
+    <!-- AJAX API Client -->
+    <script src="../public/assets/js/api-client.js"></script>
     <!-- Custom JS -->
     <script src="../public/assets/js/custom.js"></script>
     <style>
@@ -170,11 +172,7 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
                         <span class="material-symbols-outlined text-[24px]">folder</span>
                         <p class="text-sm font-medium">Categories</p>
                     </a>
-                    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                        href="reviews.php">
-                        <span class="material-symbols-outlined text-[24px]">chat_bubble</span>
-                        <p class="text-sm font-medium">User Feedback</p>
-                    </a>
+               
                     <div class="my-4 border-t border-gray-100 dark:border-gray-800"></div>
                     <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         href="index.php">
@@ -227,11 +225,11 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
                     <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                         <span class="material-symbols-outlined text-xl text-gray-700 dark:text-gray-300">dark_mode</span>
                     </button>
-                    <a href="?action=create"
+                    <button id="open-drawer-btn"
                         class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm tracking-wide hover:bg-primary/90 transition-colors">
                         <span class="material-symbols-outlined text-[20px]">add</span>
                         <span>Add New Resource</span>
-                    </a>
+                    </button>
                 </div>
             </header>
             <!-- Dashboard Body -->
@@ -374,20 +372,16 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
                                                             title="View Website">
                                                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                                                         </a>
-                                                        <a href="?action=edit&id=<?php echo $web['id']; ?>"
+                                                        <button onclick="editWebsite(<?php echo $web['id']; ?>)"
                                                             class="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
                                                             title="Edit Resource">
                                                             <span class="material-symbols-outlined text-[20px]">edit_note</span>
-                                                        </a>
-                                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this website?');">
-                                                            <input type="hidden" name="delete" value="1">
-                                                            <input type="hidden" name="id" value="<?php echo $web['id']; ?>">
-                                                            <button type="submit"
-                                                                class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                                                title="Delete">
-                                                                <span class="material-symbols-outlined text-[20px]">delete</span>
-                                                            </button>
-                                                        </form>
+                                                        </button>
+                                                        <button onclick="deleteWebsite(<?php echo $web['id']; ?>, '<?php echo addslashes($web['name']); ?>')"
+                                                            class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                            title="Delete">
+                                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -409,35 +403,27 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
                             class="absolute inset-0 bg-black/40 transition-opacity <?php echo $drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'; ?>">
                         </div>
                         <section
-                            class="absolute inset-y-0 right-0 w-full max-w-md bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl transition-transform duration-200 transform <?php echo $drawerOpen ? 'translate-x-0' : 'translate-x-full'; ?> flex flex-col overflow-y-auto"
+                            class="fixed top-0 right-0 w-1/2 h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl transition-transform duration-200 transform <?php echo $drawerOpen ? 'translate-x-0' : 'translate-x-full'; ?> flex flex-col overflow-y-auto"
                             role="dialog" aria-modal="true" aria-label="Resource drawer">
                             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
                                 <div class="space-y-1">
                                     <p class="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold">Resource desk</p>
                                     <h3 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo htmlspecialchars($drawerTitle); ?></h3>
                                 </div>
-                                <a href="websites.php"
+                                <button id="close-drawer-btn"
                                     class="size-10 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 transition-colors">
                                     <span class="material-symbols-outlined">close</span>
-                                </a>
+                                </button>
                             </div>
                             <div class="px-6 py-6 space-y-6 flex-1">
-                                <form method="POST" class="space-y-6">
-                                    <?php if ($action === 'edit'): ?>
-                                        <input type="hidden" name="update" value="1">
-                                        <input type="hidden" name="id" value="<?php echo $website['id']; ?>">
-                                    <?php else: ?>
-                                        <input type="hidden" name="create" value="1">
-                                    <?php endif; ?>
-
+                                <form class="space-y-6">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category *</label>
                                         <select name="category_id" required
                                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
                                             <option value="">Select Category</option>
                                             <?php foreach ($categories as $cat): ?>
-                                                <option value="<?php echo $cat['id']; ?>"
-                                                    <?php echo ($website && $website['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
+                                                <option value="<?php echo $cat['id']; ?>">
                                                     <?php echo htmlspecialchars($cat['name']); ?>
                                                 </option>
                                             <?php endforeach; ?>
@@ -446,31 +432,31 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name *</label>
-                                        <input type="text" name="name" value="<?php echo $website ? htmlspecialchars($website['name']) : ''; ?>"
-                                            required class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                        <input type="text" name="name" required 
+                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL *</label>
-                                        <input type="url" name="url" value="<?php echo $website ? htmlspecialchars($website['url']) : ''; ?>"
-                                            required class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
+                                        <input type="url" name="url" required 
+                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
                                         <textarea name="description" rows="5"
-                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary"><?php echo $website ? htmlspecialchars($website['description']) : ''; ?></textarea>
+                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary"></textarea>
                                     </div>
 
                                     <div class="flex items-center gap-4">
                                         <button type="submit"
                                             class="flex-1 bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors">
-                                            <?php echo $action === 'create' ? 'Create' : 'Update'; ?> Website
+                                            Create Website
                                         </button>
-                                        <a href="websites.php"
+                                        <button type="button" onclick="window.crudManager?.closeDrawer()"
                                             class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                                             Cancel
-                                        </a>
+                                        </button>
                                     </div>
                                 </form>
                             </div>
@@ -479,20 +465,6 @@ $drawerTitle = $action === 'create' ? 'Add New Resource' : 'Edit Resource';
             </div>
         </main>
     </div>
-    <script>
-        (function() {
-            const backdrop = document.getElementById('websites-drawer-backdrop');
-            const closeDrawer = () => window.location.href = 'websites.php';
-            if (backdrop) {
-                backdrop.addEventListener('click', closeDrawer);
-            }
-            document.addEventListener('keydown', (event) => {
-                if (<?php echo $drawerOpen ? 'true' : 'false'; ?> && event.key === 'Escape') {
-                    closeDrawer();
-                }
-            });
-        })();
-    </script>
 </body>
 
 </html>

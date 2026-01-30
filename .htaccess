@@ -1,9 +1,16 @@
 # Enable Rewrite Engine
 RewriteEngine On
 
+# Handle 404 errors
+ErrorDocument 404 /404.php
+
 # Force HTTPS (uncomment if SSL is available)
 # RewriteCond %{HTTPS} off
 # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Serve sitemap.xml and robots.txt directly without any rewriting
+RewriteRule ^sitemap\.xml$ - [L]
+RewriteRule ^robots\.txt$ - [L]
 
 # Remove .php extension from URLs
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/+(.+)\.php(\?[^\s]*)?\s [NC]
@@ -19,19 +26,6 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.+)$ $1.php [L]
-
-# Redirect /admin to /admin/login.php
-RewriteRule ^admin/?$ /admin/login.php [R=301,L]
-
-# Protect sensitive directories - deny direct access
-RewriteRule ^config/ - [F,L]
-RewriteRule ^db/ - [F,L]
-RewriteRule ^includes/ - [F,L]
-RewriteRule ^services/ - [F,L]
-RewriteRule ^email-templates/ - [F,L]
-RewriteRule ^PHPMailer/ - [F,L]
-RewriteRule ^components/ - [F,L]
-RewriteRule ^_back_up/ - [F,L]
 
 # Gérer le cas de la page d'accueil (index)
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -52,9 +46,28 @@ RewriteRule ^$ index.php [L]
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
+# Correct MIME types for XML files (important for sitemap)
+<IfModule mod_mime.c>
+    RemoveHandler .xml
+    RemoveType .xml
+    AddType application/xml .xml
+</IfModule>
+
+# Force correct Content-Type for sitemap.xml and other XML files
+<FilesMatch "\.xml$">
+    <IfModule mod_headers.c>
+        Header set Content-Type "application/xml; charset=UTF-8"
+    </IfModule>
+</FilesMatch>
+
+# Explicitly handle sitemap.xml
+<Files "sitemap.xml">
+    ForceType application/xml
+</Files>
+
 # Enable Compression
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml
 </IfModule>
 
 # Browser Caching

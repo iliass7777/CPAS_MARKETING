@@ -17,4 +17,5 @@
     <script src="public/assets/js/custom.js"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="public/assets/css/style.css" />
+    <link rel="stylesheet" href="public/assets/css/custom.css"/>
 </head>

@@ -84,7 +84,7 @@ if ($action === 'edit' && $id > 0) {
 }
 
 $drawerOpen = in_array($action, ['create', 'edit']);
-$drawerTitle = $action === 'create' ? 'Create Category' : 'Edit Category';
+$drawerTitle = $action === 'edit' ? 'Edit Category' : 'Create Category';
 ?>
 <!DOCTYPE html>
 <html class="light" lang="en">
@@ -93,12 +93,13 @@ $drawerTitle = $action === 'create' ? 'Create Category' : 'Edit Category';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Back Office - Categories</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap"
+    <link href="../public/assets/css/lexend.css"
         rel="stylesheet" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        href="../public/assets/css/material-symbols.css"
         rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind CSS -->
+    <script src="../public/assets/js/tailwind.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -117,6 +118,8 @@ $drawerTitle = $action === 'create' ? 'Create Category' : 'Edit Category';
             },
         }
     </script>
+    <!-- AJAX API Client -->
+    <script src="../public/assets/js/api-client.js"></script>
     <!-- Custom JS -->
     <script src="../public/assets/js/custom.js"></script>
     <style>
@@ -192,11 +195,11 @@ $drawerTitle = $action === 'create' ? 'Create Category' : 'Edit Category';
                     <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                         <span class="material-symbols-outlined text-xl text-gray-700 dark:text-gray-300">dark_mode</span>
                     </button>
-                    <a href="?action=create"
+                    <button id="open-drawer-btn"
                         class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm tracking-wide hover:bg-primary/90 transition-colors">
                         <span class="material-symbols-outlined text-[20px]">add</span>
                         <span>New Category</span>
-                    </a>
+                    </button>
                 </div>
             </header>
 
@@ -277,17 +280,17 @@ $drawerTitle = $action === 'create' ? 'Create Category' : 'Edit Category';
                         class="absolute inset-0 bg-black/40 transition-opacity <?php echo $drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'; ?>">
                     </div>
                     <section
-                        class="absolute inset-y-0 right-0 w-full max-w-md bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl transition-transform duration-200 transform <?php echo $drawerOpen ? 'translate-x-0' : 'translate-x-full'; ?> flex flex-col overflow-y-auto"
+                        class="fixed top-0 right-0 w-1/2 h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-2xl transition-transform duration-200 transform <?php echo $drawerOpen ? 'translate-x-0' : 'translate-x-full'; ?> flex flex-col overflow-y-auto"
                         role="dialog" aria-modal="true" aria-label="Categories drawer">
                         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
                             <div class="space-y-1">
                                 <p class="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold">Category desk</p>
                                 <h3 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo htmlspecialchars($drawerTitle); ?></h3>
                             </div>
-                            <a href="categories.php"
+                            <button id="close-drawer-btn"
                                 class="size-10 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 transition-colors">
                                 <span class="material-symbols-outlined">close</span>
-                            </a>
+                            </button>
                         </div>
                         <div class="px-6 py-6 space-y-6 flex-1">
                             <form method="POST" class="space-y-6">
@@ -335,16 +338,49 @@ $drawerTitle = $action === 'create' ? 'Create Category' : 'Edit Category';
     </div>
     <script>
         (function() {
+            function openDrawer() {
+                const outer = document.querySelector('.fixed.inset-0.z-40');
+                const backdrop = document.getElementById('categories-drawer-backdrop');
+                const section = backdrop.nextElementSibling;
+                outer.classList.remove('pointer-events-none');
+                outer.setAttribute('aria-hidden', 'false');
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+                backdrop.classList.add('opacity-100', 'pointer-events-auto');
+                section.classList.remove('translate-x-full');
+                section.classList.add('translate-x-0');
+            }
+
+            function closeDrawer() {
+                const outer = document.querySelector('.fixed.inset-0.z-40');
+                const backdrop = document.getElementById('categories-drawer-backdrop');
+                const section = backdrop.nextElementSibling;
+                outer.classList.add('pointer-events-none');
+                outer.setAttribute('aria-hidden', 'true');
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+                backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+                section.classList.add('translate-x-full');
+                section.classList.remove('translate-x-0');
+            }
+
             const backdrop = document.getElementById('categories-drawer-backdrop');
-            const closeDrawer = () => window.location.href = 'categories.php';
             if (backdrop) {
                 backdrop.addEventListener('click', closeDrawer);
             }
             document.addEventListener('keydown', (event) => {
-                if (<?php echo $drawerOpen ? 'true' : 'false'; ?> && event.key === 'Escape') {
+                if (event.key === 'Escape') {
                     closeDrawer();
                 }
             });
+
+            const openBtn = document.getElementById('open-drawer-btn');
+            if (openBtn) {
+                openBtn.addEventListener('click', openDrawer);
+            }
+
+            const closeBtn = document.getElementById('close-drawer-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeDrawer);
+            }
         })();
     </script>
 </body>

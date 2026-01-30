@@ -135,6 +135,8 @@ if ($action === 'edit' && $id > 0) {
             },
         }
     </script>
+    <!-- AJAX API Client -->
+    <script src="../public/assets/js/api-client.js"></script>
     <!-- Custom JS -->
     <script src="../public/assets/js/custom.js"></script>
 </head>
@@ -200,18 +202,8 @@ if ($action === 'edit' && $id > 0) {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
-                    <th>ID</th>
-                    <th>Website</th>
-                    <th>Author</th>
-                    <th>Email</th>
-                    <th>Rating</th>
-                    <th>Comment</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                </tr>
-                <?php foreach ($reviews as $rev): ?>
-                    <tr>
+                        <?php foreach ($reviews as $rev): ?>
+                            <tr>
                         <td><?php echo $rev['id']; ?></td>
                         <td>
                             <a href="../website.php?id=<?php echo $rev['website_id']; ?>" target="_blank">
@@ -303,41 +295,54 @@ if ($action === 'edit' && $id > 0) {
         </form>
         
     <?php elseif ($action === 'edit'): ?>
-        <h2>Edit Review</h2>
-        <p><a href="reviews.php">← Back to List</a></p>
+        <h2 class="text-2xl font-bold mb-4">Edit Review</h2>
+        <p class="mb-4"><a href="reviews.php" class="text-primary hover:underline">← Back to List</a></p>
         
-        <form method="POST">
+        <form method="POST" class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-300 dark:border-gray-600">
             <input type="hidden" name="update" value="1">
             <input type="hidden" name="id" value="<?php echo $review['id']; ?>">
             
-            <p><strong>Website:</strong> <?php echo htmlspecialchars($review['website_name']); ?></p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website:</label>
+                <p class="text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg"><?php echo htmlspecialchars($review['website_name']); ?></p>
+            </div>
             
-            <label>Author Name: *</label><br>
-            <input type="text" name="author_name" value="<?php echo htmlspecialchars($review['author_name']); ?>" required><br><br>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Author Name: *</label>
+                <input type="text" name="author_name" value="<?php echo htmlspecialchars($review['author_name']); ?>" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required>
+            </div>
             
-            <label>Author Email:</label><br>
-            <input type="email" name="author_email" value="<?php echo htmlspecialchars($review['author_email']); ?>"><br><br>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Author Email:</label>
+                <input type="email" name="author_email" value="<?php echo htmlspecialchars($review['author_email']); ?>" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
             
-            <label>Rating: *</label><br>
-            <select name="rating" required>
-                <option value="1" <?php echo $review['rating'] == 1 ? 'selected' : ''; ?>>1 - Poor</option>
-                <option value="2" <?php echo $review['rating'] == 2 ? 'selected' : ''; ?>>2 - Fair</option>
-                <option value="3" <?php echo $review['rating'] == 3 ? 'selected' : ''; ?>>3 - Good</option>
-                <option value="4" <?php echo $review['rating'] == 4 ? 'selected' : ''; ?>>4 - Very Good</option>
-                <option value="5" <?php echo $review['rating'] == 5 ? 'selected' : ''; ?>>5 - Excellent</option>
-            </select><br><br>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rating: *</label>
+                <select name="rating" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" required>
+                    <option value="1" <?php echo $review['rating'] == 1 ? 'selected' : ''; ?>>1 - Poor</option>
+                    <option value="2" <?php echo $review['rating'] == 2 ? 'selected' : ''; ?>>2 - Fair</option>
+                    <option value="3" <?php echo $review['rating'] == 3 ? 'selected' : ''; ?>>3 - Good</option>
+                    <option value="4" <?php echo $review['rating'] == 4 ? 'selected' : ''; ?>>4 - Very Good</option>
+                    <option value="5" <?php echo $review['rating'] == 5 ? 'selected' : ''; ?>>5 - Excellent</option>
+                </select>
+            </div>
             
-            <label>Comment:</label><br>
-            <textarea name="comment" rows="5" cols="50"><?php echo htmlspecialchars($review['comment']); ?></textarea><br><br>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comment:</label>
+                <textarea name="comment" rows="5" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"><?php echo htmlspecialchars($review['comment']); ?></textarea>
+            </div>
             
-            <label>Status:</label><br>
-            <select name="status">
-                <option value="pending" <?php echo $review['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                <option value="approved" <?php echo $review['status'] === 'approved' ? 'selected' : ''; ?>>Approved</option>
-                <option value="rejected" <?php echo $review['status'] === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
-            </select><br><br>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status:</label>
+                <select name="status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="pending" <?php echo $review['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                    <option value="approved" <?php echo $review['status'] === 'approved' ? 'selected' : ''; ?>>Approved</option>
+                    <option value="rejected" <?php echo $review['status'] === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                </select>
+            </div>
             
-            <button type="submit">Update Review</button>
+            <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">Update Review</button>
         </form>
     <?php endif; ?>
 </body>
