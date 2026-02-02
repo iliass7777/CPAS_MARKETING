@@ -20,6 +20,9 @@ $totalWebsites = count($websiteModel->getAll());
 $totalReviews = count($reviewModel->getAll());
 $pendingReviews = count(array_filter($reviewModel->getAll(), function($r) {
     return $r['status'] === 'pending';
+
+
+    
 }));
 ?>
 <!DOCTYPE html>
